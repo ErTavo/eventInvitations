@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-serif: "Cormorant Garamond", "Georgia", serif;
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-script: "Great Vibes", cursive;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased;
+  }
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-script {
+    font-family: var(--font-script);
+  }
+}
+
+/* Vintage theme */
+.theme-vintage {
+  --primary: #8b6c42;
+  --secondary: #f5ede0;
+  --accent: #c9a96e;
+  --text: #3d2b1f;
+  --bg: #fdf6ec;
+}
+
+/* Elegant theme */
+.theme-elegant {
+  --primary: #b8974a;
+  --secondary: #f5f0e8;
+  --accent: #d4b896;
+  --text: #2c2c2c;
+  --bg: #fafaf8;
+}
+
+/* Modern theme */
+.theme-modern {
+  --primary: #1a1a2e;
+  --secondary: #e8e8f0;
+  --accent: #9b5de5;
+  --text: #1a1a2e;
+  --bg: #ffffff;
+}
+
+/* Floral theme */
+.theme-floral {
+  --primary: #c2547a;
+  --secondary: #fde8ef;
+  --accent: #f4a5be;
+  --text: #3d1a2a;
+  --bg: #fff9fb;
+}
+
+/* Minimal theme */
+.theme-minimal {
+  --primary: #2d2d2d;
+  --secondary: #f0f0f0;
+  --accent: #888888;
+  --text: #2d2d2d;
+  --bg: #ffffff;
+}

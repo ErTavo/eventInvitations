@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm audit *)",
+      "Bash(echo \"NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co\")",
+      "Bash(echo \"NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder\")",
+      "Bash(echo \"SUPABASE_SERVICE_ROLE_KEY=placeholder\")",
+      "Bash(npm run *)"
+    ]
+  }
+}
