@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Event, Module, ModuleType } from "@/lib/supabase/types";
-import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp } from "lucide-react";
+import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import ImageUpload from "@/components/ui/ImageUpload";
+import Image from "next/image";
 
 const MODULE_LABELS: Record<ModuleType, string> = {
   carousel: "Carrusel de imágenes",
@@ -152,20 +154,43 @@ function ModuleConfigEditor({
   if (mod.type === "carousel" || mod.type === "gallery") {
     const images: string[] = (cfg.images as string[]) ?? [];
     fields.push(
-      <div key="images">
-        <label className="block text-xs font-medium text-stone-600 mb-1">
-          URLs de imágenes (una por línea)
+      <div key="images" className="space-y-3">
+        <label className="block text-xs font-medium text-stone-600">
+          Imágenes ({images.length})
         </label>
-        <textarea
-          rows={4}
-          value={images.join("\n")}
-          onChange={(e) =>
+        {/* Existing images */}
+        {images.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            {images.map((src, i) => (
+              <div key={i} className="relative group aspect-square rounded overflow-hidden border border-stone-200">
+                <Image src={src} alt="" fill className="object-cover" sizes="150px" />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCfg((p) => ({
+                      ...p,
+                      images: (p.images as string[]).filter((_, idx) => idx !== i),
+                    }))
+                  }
+                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Upload new */}
+        <ImageUpload
+          onChange={(url) =>
             setCfg((p) => ({
               ...p,
-              images: e.target.value.split("\n").filter(Boolean),
+              images: [...((p.images as string[]) ?? []), url],
             }))
           }
-          className="w-full border border-stone-200 rounded px-2 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-stone-400 resize-none"
+          folder="gallery"
+          label="Agregar imagen"
+          aspectRatio="square"
         />
       </div>
     );

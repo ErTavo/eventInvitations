@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import type { Event } from "@/lib/supabase/types";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 interface Props { event: Event }
 
@@ -12,12 +14,12 @@ interface FormValues {
   date: string;
   location: string;
   description: string;
-  cover_image: string;
   is_published: boolean;
 }
 
 export default function EventSettingsTab({ event }: Props) {
   const router = useRouter();
+  const [coverImage, setCoverImage] = useState(event.cover_image ?? "");
   const { register, handleSubmit, formState: { isSubmitting } } =
     useForm<FormValues>({
       defaultValues: {
@@ -25,7 +27,6 @@ export default function EventSettingsTab({ event }: Props) {
         date: event.date.slice(0, 16),
         location: event.location ?? "",
         description: event.description ?? "",
-        cover_image: event.cover_image ?? "",
         is_published: event.is_published,
       },
     });
@@ -34,7 +35,7 @@ export default function EventSettingsTab({ event }: Props) {
     const res = await fetch(`/api/events/${event.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify({ ...values, cover_image: coverImage || null }),
     });
     if (!res.ok) { toast.error("Error al guardar"); return; }
     toast.success("Guardado");
@@ -60,8 +61,15 @@ export default function EventSettingsTab({ event }: Props) {
         <textarea {...register("description")} rows={3} className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500 resize-none" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">URL imagen de portada</label>
-        <input {...register("cover_image")} className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
+        <label className="block text-sm font-medium text-stone-700 mb-2">Imagen de portada</label>
+        <ImageUpload
+          value={coverImage}
+          onChange={setCoverImage}
+          onRemove={() => setCoverImage("")}
+          folder="covers"
+          label="Subir imagen de portada"
+          aspectRatio="cover"
+        />
       </div>
       <label className="flex items-center gap-2 cursor-pointer">
         <input type="checkbox" {...register("is_published")} className="w-4 h-4" />

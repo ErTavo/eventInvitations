@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import type { EventStyle, ThemeId } from "@/lib/supabase/types";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 const THEMES: { id: ThemeId; label: string; primary: string }[] = [
   { id: "vintage", label: "Vintage", primary: "#8b6c42" },
@@ -18,12 +20,12 @@ interface FormValues {
   date: string;
   location: string;
   description: string;
-  cover_image: string;
   theme: ThemeId;
 }
 
 export default function EventForm() {
   const router = useRouter();
+  const [coverImage, setCoverImage] = useState("");
   const { register, handleSubmit, watch, formState: { isSubmitting } } =
     useForm<FormValues>({ defaultValues: { theme: "elegant" } });
 
@@ -41,7 +43,7 @@ export default function EventForm() {
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...values, style }),
+      body: JSON.stringify({ ...values, cover_image: coverImage || null, style }),
     });
 
     if (!res.ok) {
@@ -103,13 +105,16 @@ export default function EventForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">
-          URL imagen de portada
+        <label className="block text-sm font-medium text-stone-700 mb-2">
+          Imagen de portada
         </label>
-        <input
-          {...register("cover_image")}
-          className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500"
-          placeholder="https://..."
+        <ImageUpload
+          value={coverImage}
+          onChange={setCoverImage}
+          onRemove={() => setCoverImage("")}
+          folder="covers"
+          label="Subir imagen de portada"
+          aspectRatio="cover"
         />
       </div>
 
