@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import InvitationPage from "@/components/invitation/InvitationPage";
+import InvitationUnavailable from "@/components/invitation/InvitationUnavailable";
 import type { Event, Participant, Module } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,11 @@ export default async function PublicInvitationPage({
 
   const event = eventResult.data as Event | null;
   if (!event) notFound();
+
+  // Block access if event is not published (previews bypass this)
+  if (!event.is_published && !isPreview) {
+    return <InvitationUnavailable event={event} />;
+  }
 
   let participant: Participant;
 
