@@ -173,6 +173,87 @@ function ModuleConfigEditor({
     fields.push(field("mapAddress", "Dirección"));
     fields.push(field("mapEmbedUrl", "URL embed de Google Maps"));
   }
+  if (mod.type === "itinerary") {
+    const items: { time: string; description: string }[] =
+      (cfg.itineraryItems as { time: string; description: string }[]) ?? [];
+    fields.push(
+      <div key="itinerary" className="space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-stone-600">
+            Momentos del evento ({items.length})
+          </label>
+          <button
+            type="button"
+            onClick={() =>
+              setCfg((p) => ({
+                ...p,
+                itineraryItems: [
+                  ...((p.itineraryItems as typeof items) ?? []),
+                  { time: "", description: "" },
+                ],
+              }))
+            }
+            className="text-xs bg-stone-800 text-white px-2.5 py-1 hover:bg-stone-700 transition-colors"
+          >
+            + Agregar
+          </button>
+        </div>
+
+        {items.length === 0 && (
+          <p className="text-xs text-stone-400 italic text-center py-3 border border-dashed border-stone-200 rounded">
+            Agrega los momentos del evento (ceremonia, recepción, cena…)
+          </p>
+        )}
+
+        <div className="space-y-2">
+          {items.map((item, i) => (
+            <div key={i} className="flex gap-2 items-start">
+              <input
+                type="text"
+                value={item.time}
+                onChange={(e) =>
+                  setCfg((p) => {
+                    const next = [...((p.itineraryItems as typeof items) ?? [])];
+                    next[i] = { ...next[i], time: e.target.value };
+                    return { ...p, itineraryItems: next };
+                  })
+                }
+                placeholder="Ej: 4:00 PM"
+                className="w-28 shrink-0 border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+              />
+              <input
+                type="text"
+                value={item.description}
+                onChange={(e) =>
+                  setCfg((p) => {
+                    const next = [...((p.itineraryItems as typeof items) ?? [])];
+                    next[i] = { ...next[i], description: e.target.value };
+                    return { ...p, itineraryItems: next };
+                  })
+                }
+                placeholder="Ej: Ceremonia civil"
+                className="flex-1 border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setCfg((p) => ({
+                    ...p,
+                    itineraryItems: ((p.itineraryItems as typeof items) ?? []).filter(
+                      (_, idx) => idx !== i
+                    ),
+                  }))
+                }
+                className="text-stone-300 hover:text-rose-500 transition-colors pt-1.5"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (mod.type === "dress_code") {
     fields.push(field("dressCodeText", "Descripción del código de vestimenta"));
   }
