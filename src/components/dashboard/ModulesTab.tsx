@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import type { Event, Module, ModuleType } from "@/lib/supabase/types";
 import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
+import AudioUpload from "@/components/ui/AudioUpload";
 import Image from "next/image";
 
 const MODULE_LABELS: Record<ModuleType, string> = {
@@ -137,8 +138,36 @@ function ModuleConfigEditor({
   const fields: React.ReactNode[] = [];
 
   if (mod.type === "music") {
-    fields.push(field("musicUrl", "URL del audio (mp3)"));
-    fields.push(field("musicTitle", "Título de la canción"));
+    fields.push(
+      <div key="music" className="space-y-3">
+        <label className="block text-xs font-medium text-stone-600">Canción</label>
+        <AudioUpload
+          value={(cfg.musicUrl as string) || ""}
+          title={(cfg.musicTitle as string) || ""}
+          onChange={(url, filename) =>
+            setCfg((p) => ({
+              ...p,
+              musicUrl: url,
+              musicTitle: p.musicTitle || filename,
+            }))
+          }
+          onRemove={() => setCfg((p) => ({ ...p, musicUrl: "", musicTitle: "" }))}
+          folder="audio"
+        />
+        <div>
+          <label className="block text-xs font-medium text-stone-600 mb-1">
+            Título mostrado en la invitación
+          </label>
+          <input
+            type="text"
+            value={(cfg.musicTitle as string) ?? ""}
+            onChange={(e) => setCfg((p) => ({ ...p, musicTitle: e.target.value }))}
+            placeholder="Ej: Perfect – Ed Sheeran"
+            className="w-full border border-stone-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+      </div>
+    );
   }
   if (mod.type === "map") {
     fields.push(field("mapAddress", "Dirección"));
