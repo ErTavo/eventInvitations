@@ -1,4 +1,4 @@
-import type { ThemeId } from "@/lib/supabase/types";
+import type { EventStyle, ThemeId } from "@/lib/supabase/types";
 
 export interface ThemeConfig {
   id: ThemeId;
@@ -14,9 +14,11 @@ export interface ThemeConfig {
   primary: string;
   secondary: string;
   accent: string;
+  // Only set for custom theme — used as inline CSS vars on the root div
+  cssVars?: React.CSSProperties;
 }
 
-export const themeConfig: Record<ThemeId, ThemeConfig> = {
+export const themeConfig: Record<Exclude<ThemeId, "custom">, ThemeConfig> = {
   vintage: {
     id: "vintage",
     bgClass: "bg-[#fdf6ec]",
@@ -29,7 +31,7 @@ export const themeConfig: Record<ThemeId, ThemeConfig> = {
     dividerClass: "border-[#c9a96e]",
     cardClass: "bg-[#fef9f2] border border-[#e8d5b7]",
     primary: "#8b6c42",
-    secondary: "#f5ede0",
+    secondary: "#fdf6ec",
     accent: "#c9a96e",
   },
   elegant: {
@@ -44,7 +46,7 @@ export const themeConfig: Record<ThemeId, ThemeConfig> = {
     dividerClass: "border-[#d4b896]",
     cardClass: "bg-white border border-[#e8e0d0]",
     primary: "#b8974a",
-    secondary: "#f5f0e8",
+    secondary: "#fafaf8",
     accent: "#d4b896",
   },
   modern: {
@@ -59,7 +61,7 @@ export const themeConfig: Record<ThemeId, ThemeConfig> = {
     dividerClass: "border-[#e0d0f5]",
     cardClass: "bg-[#f8f5ff] border border-[#e8d8f8]",
     primary: "#9b5de5",
-    secondary: "#e8e8f0",
+    secondary: "#ffffff",
     accent: "#c490f5",
   },
   floral: {
@@ -74,7 +76,7 @@ export const themeConfig: Record<ThemeId, ThemeConfig> = {
     dividerClass: "border-[#f4a5be]",
     cardClass: "bg-[#fff0f5] border border-[#ffd0e0]",
     primary: "#c2547a",
-    secondary: "#fde8ef",
+    secondary: "#fff9fb",
     accent: "#f4a5be",
   },
   minimal: {
@@ -89,7 +91,42 @@ export const themeConfig: Record<ThemeId, ThemeConfig> = {
     dividerClass: "border-[#e0e0e0]",
     cardClass: "bg-[#f8f8f8] border border-[#e8e8e8]",
     primary: "#2d2d2d",
-    secondary: "#f0f0f0",
+    secondary: "#ffffff",
     accent: "#888888",
   },
 };
+
+// Custom theme: all classes reference CSS variables set on the root div.
+// Tailwind v4 supports arbitrary CSS-var references: bg-[var(--x)], text-[var(--x)]
+function buildCustomTheme(style: EventStyle): ThemeConfig {
+  const { primaryColor, secondaryColor, accentColor, textColor } = style;
+
+  // Lighten the bg slightly for cards/sections (mix with white)
+  return {
+    id: "custom",
+    bgClass: "bg-[var(--inv-bg)]",
+    sectionClass: "bg-[var(--inv-bg)]",
+    headingClass: "text-[var(--inv-primary)]",
+    textClass: "text-[var(--inv-text)]",
+    mutedClass: "text-[var(--inv-accent)]",
+    accentClass: "text-[var(--inv-accent)]",
+    buttonClass: "bg-[var(--inv-primary)] text-white hover:opacity-90",
+    dividerClass: "border-[var(--inv-accent)]",
+    cardClass: "bg-[var(--inv-card)] border border-[var(--inv-accent)]",
+    primary: primaryColor,
+    secondary: secondaryColor,
+    accent: accentColor,
+    cssVars: {
+      "--inv-primary": primaryColor,
+      "--inv-bg":      secondaryColor,
+      "--inv-accent":  accentColor,
+      "--inv-text":    textColor,
+      "--inv-card":    secondaryColor,
+    } as React.CSSProperties,
+  };
+}
+
+export function buildThemeConfig(style: EventStyle): ThemeConfig {
+  if (style.theme === "custom") return buildCustomTheme(style);
+  return themeConfig[style.theme] ?? themeConfig.elegant;
+}

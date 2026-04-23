@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import type { Event, Participant } from "@/lib/supabase/types";
-import { Copy, Trash2, UserPlus, CheckCircle, XCircle, Clock, MessageSquare } from "lucide-react";
+import { Copy, Trash2, UserPlus, CheckCircle, XCircle, Clock, MessageSquare, Search, X } from "lucide-react";
 import NoteDialog from "@/components/ui/NoteDialog";
 
 interface Props { event: Event; participants: Participant[] }
@@ -30,10 +30,33 @@ const STATUS_ROW: Record<string, string> = {
 
 interface FormValues { name: string; companions: number }
 
+type AttendanceFilter = "all" | "confirmed" | "declined" | "pending";
+type ViewedFilter = "all" | "viewed" | "not_viewed";
+
 export default function ParticipantsTab({ event, participants: initial }: Props) {
   const router = useRouter();
   const [participants, setParticipants] = useState(initial);
   const [selectedNote, setSelectedNote] = useState<Participant | null>(null);
+
+  // Filters
+  const [search, setSearch] = useState("");
+  const [attendanceFilter, setAttendanceFilter] = useState<AttendanceFilter>("all");
+  const [viewedFilter, setViewedFilter] = useState<ViewedFilter>("all");
+
+  const filtered = useMemo(() => {
+    return participants.filter((p) => {
+      if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (attendanceFilter !== "all" && p.attendance !== attendanceFilter) return false;
+      if (viewedFilter === "viewed" && !p.invitation_viewed) return false;
+      if (viewedFilter === "not_viewed" && p.invitation_viewed) return false;
+      return true;
+    });
+  }, [participants, search, attendanceFilter, viewedFilter]);
+
+  const activeFilterCount =
+    (search ? 1 : 0) +
+    (attendanceFilter !== "all" ? 1 : 0) +
+    (viewedFilter !== "all" ? 1 : 0);
 
   const { register, handleSubmit, reset, formState: { isSubmitting } } =
     useForm<FormValues>({ defaultValues: { companions: 0 } });
@@ -131,10 +154,115 @@ export default function ParticipantsTab({ event, participants: initial }: Props)
         </button>
       </form>
 
+      {/* Filters */}
+      {participants.length > 0 && (
+        <div className="bg-white border border-stone-200 rounded p-4 space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre..."
+              className="w-full pl-9 pr-8 py-2 border border-stone-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 bg-stone-50"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700">
+                <X size={13} />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Attendance filters */}
+            <div className="flex rounded overflow-hidden border border-stone-200 text-xs">
+              {(["all", "confirmed", "declined", "pending"] as AttendanceFilter[]).map((val) => {
+                const labels = { all: "Todos", confirmed: "Confirmaron", declined: "Declinaron", pending: "Pendiente" };
+                const colors = {
+                  all: attendanceFilter === "all" ? "bg-stone-800 text-white" : "bg-white text-stone-600 hover:bg-stone-50",
+                  confirmed: attendanceFilter === "confirmed" ? "bg-emerald-700 text-white" : "bg-white text-stone-600 hover:bg-emerald-50",
+                  declined: attendanceFilter === "declined" ? "bg-rose-600 text-white" : "bg-white text-stone-600 hover:bg-rose-50",
+                  pending: attendanceFilter === "pending" ? "bg-amber-500 text-white" : "bg-white text-stone-600 hover:bg-amber-50",
+                };
+                return (
+                  <button
+                    key={val}
+                    onClick={() => setAttendanceFilter(val)}
+                    className={`px-3 py-1.5 border-r last:border-r-0 border-stone-200 transition-colors ${colors[val]}`}
+                  >
+                    {labels[val]}
+                    {val !== "all" && (
+                      <span className="ml-1.5 opacity-70">
+                        ({participants.filter((p) => p.attendance === val).length})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Viewed filter */}
+            <div className="flex rounded overflow-hidden border border-stone-200 text-xs">
+              {(["all", "viewed", "not_viewed"] as ViewedFilter[]).map((val) => {
+                const labels = { all: "Todas", viewed: "Ya la vieron", not_viewed: "Sin ver" };
+                const active = viewedFilter === val;
+                return (
+                  <button
+                    key={val}
+                    onClick={() => setViewedFilter(val)}
+                    className={`px-3 py-1.5 border-r last:border-r-0 border-stone-200 transition-colors ${
+                      active ? "bg-stone-800 text-white" : "bg-white text-stone-600 hover:bg-stone-50"
+                    }`}
+                  >
+                    {labels[val]}
+                    {val !== "all" && (
+                      <span className="ml-1.5 opacity-70">
+                        ({val === "viewed"
+                          ? participants.filter((p) => p.invitation_viewed).length
+                          : participants.filter((p) => !p.invitation_viewed).length})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Clear all */}
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => { setSearch(""); setAttendanceFilter("all"); setViewedFilter("all"); }}
+                className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-700 transition-colors ml-1"
+              >
+                <X size={12} />
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+
+          {/* Result count */}
+          {activeFilterCount > 0 && (
+            <p className="text-xs text-stone-400">
+              Mostrando {filtered.length} de {participants.length} invitados
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Table */}
       <div className="bg-white border border-stone-200 rounded overflow-hidden">
         {!participants.length ? (
           <p className="text-center text-stone-400 text-sm py-8">Sin invitados aún</p>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-10 space-y-2">
+            <p className="text-stone-400 text-sm">Ningún invitado coincide con los filtros</p>
+            <button
+              onClick={() => { setSearch(""); setAttendanceFilter("all"); setViewedFilter("all"); }}
+              className="text-xs text-stone-500 underline hover:text-stone-800"
+            >
+              Limpiar filtros
+            </button>
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead className="bg-stone-50 border-b border-stone-200">
@@ -148,7 +276,7 @@ export default function ParticipantsTab({ event, participants: initial }: Props)
               </tr>
             </thead>
             <tbody>
-              {participants.map((p) => (
+              {filtered.map((p) => (
                 <tr
                   key={p.id}
                   className={`border-b border-stone-100 hover:bg-stone-50 transition-colors ${STATUS_ROW[p.attendance]}`}
@@ -227,6 +355,7 @@ export default function ParticipantsTab({ event, participants: initial }: Props)
       </div>
 
       {/* Note dialog */}
+
       <NoteDialog participant={selectedNote} onClose={() => setSelectedNote(null)} />
     </div>
   );

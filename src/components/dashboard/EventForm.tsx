@@ -7,12 +7,12 @@ import toast from "react-hot-toast";
 import type { EventStyle, ThemeId } from "@/lib/supabase/types";
 import ImageUpload from "@/components/ui/ImageUpload";
 
-const THEMES: { id: ThemeId; label: string; primary: string }[] = [
-  { id: "vintage", label: "Vintage", primary: "#8b6c42" },
-  { id: "elegant", label: "Elegante", primary: "#b8974a" },
-  { id: "modern", label: "Moderno", primary: "#9b5de5" },
-  { id: "floral", label: "Floral", primary: "#c2547a" },
-  { id: "minimal", label: "Minimal", primary: "#2d2d2d" },
+const THEMES: { id: ThemeId; label: string; primary: string; secondary: string; accent: string; textColor: string }[] = [
+  { id: "vintage", label: "Vintage",  primary: "#8b6c42", secondary: "#fdf6ec", accent: "#c9a96e", textColor: "#5a4030" },
+  { id: "elegant", label: "Elegante", primary: "#b8974a", secondary: "#fafaf8", accent: "#d4b896", textColor: "#444444" },
+  { id: "modern",  label: "Moderno",  primary: "#9b5de5", secondary: "#ffffff", accent: "#c490f5", textColor: "#2d2d45" },
+  { id: "floral",  label: "Floral",   primary: "#c2547a", secondary: "#fff9fb", accent: "#f4a5be", textColor: "#5a2a3d" },
+  { id: "minimal", label: "Minimal",  primary: "#2d2d2d", secondary: "#ffffff", accent: "#888888", textColor: "#444444" },
 ];
 
 interface FormValues {
@@ -35,9 +35,11 @@ export default function EventForm() {
     const themeData = THEMES.find((t) => t.id === values.theme)!;
     const style: EventStyle = {
       theme: values.theme,
-      primaryColor: themeData.primary,
-      secondaryColor: "#f5f0e8",
-      fontFamily: "Cormorant Garamond",
+      primaryColor:   themeData.primary,
+      secondaryColor: themeData.secondary ?? "#fafaf8",
+      accentColor:    themeData.accent    ?? themeData.primary,
+      textColor:      themeData.textColor ?? "#444444",
+      fontFamily:     "Cormorant Garamond",
     };
 
     const res = await fetch("/api/events", {

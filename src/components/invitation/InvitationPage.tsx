@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import type { Event, Module, Participant } from "@/lib/supabase/types";
-import { themeConfig } from "./themes";
+import { buildThemeConfig } from "./themes";
 import HeroSection from "./HeroSection";
 import CountdownModule from "./modules/CountdownModule";
 import CarouselModule from "./modules/CarouselModule";
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function InvitationPage({ event, participant, modules, isPreview = false }: Props) {
-  const theme = themeConfig[event.style.theme ?? "elegant"];
+  const theme = buildThemeConfig(event.style);
 
   useEffect(() => {
     if (!isPreview && !participant.invitation_viewed) {
@@ -34,7 +34,7 @@ export default function InvitationPage({ event, participant, modules, isPreview 
   return (
     <div
       className={`min-h-screen ${theme.bgClass}`}
-      style={{ fontFamily: event.style.fontFamily || "Cormorant Garamond, serif" }}
+      style={{ fontFamily: event.style.fontFamily || "Cormorant Garamond, serif", ...theme.cssVars }}
     >
       {isPreview && (
         <div className="sticky top-0 z-50 bg-amber-400 text-amber-900 text-xs text-center py-2 px-4 font-medium tracking-wide">

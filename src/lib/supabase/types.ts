@@ -13,12 +13,14 @@ export type ModuleType =
 
 export type AttendanceStatus = "pending" | "confirmed" | "declined";
 
-export type ThemeId = "vintage" | "elegant" | "modern" | "floral" | "minimal";
+export type ThemeId = "vintage" | "elegant" | "modern" | "floral" | "minimal" | "custom";
 
 export interface EventStyle {
   theme: ThemeId;
-  primaryColor: string;
-  secondaryColor: string;
+  primaryColor: string;   // headings, buttons, accents
+  secondaryColor: string; // page background
+  accentColor: string;    // dividers, borders, muted elements
+  textColor: string;      // body text
   fontFamily: string;
   backgroundImage?: string;
 }
