@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Plus, CalendarDays, Users, Eye, EyeOff } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data: events } = await supabase
     .from("events")
     .select("*")
