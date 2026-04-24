@@ -355,7 +355,13 @@ function AddToCalendar({ event }: { event: Event }) {
 // Hero with parallax
 // ─────────────────────────────────────────────────────────────────────────────
 
-function LeavesHero({ event, participant }: { event: Event; participant: Participant }) {
+interface ParentsConfig {
+  sectionTitle?: string; brideParentsLabel?: string; brideParentNames?: string[];
+  groomParentsLabel?: string; groomParentNames?: string[];
+  godfathersLabel?: string; godfatherNames?: string[];
+}
+
+function LeavesHero({ event, participant, parentsConfig }: { event: Event; participant: Participant; parentsConfig?: ParentsConfig }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "35%"]);
@@ -423,6 +429,45 @@ function LeavesHero({ event, participant }: { event: Event; participant: Partici
         )}
 
         <AddToCalendar event={event} />
+
+        {/* Parents inline in hero */}
+        {parentsConfig && (() => {
+          const bn = parentsConfig.brideParentNames ?? [];
+          const gn = parentsConfig.groomParentNames ?? [];
+          const god = parentsConfig.godfatherNames ?? [];
+          if (!bn.length && !gn.length && !god.length) return null;
+          const textColor = event.cover_image ? "#fff" : THEME.primary;
+          const mutedColor = event.cover_image ? "rgba(255,255,255,0.65)" : THEME.accent;
+          return (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.8 }} className="w-full pt-4 space-y-3">
+              <div className="h-px w-12 mx-auto" style={{ backgroundColor: event.cover_image ? "rgba(255,255,255,0.35)" : THEME.accent }} />
+              {(bn.length > 0 || gn.length > 0) && (
+                <div className="grid grid-cols-2 gap-3">
+                  {bn.length > 0 && (
+                    <div>
+                      {parentsConfig.brideParentsLabel && <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: mutedColor }}>{parentsConfig.brideParentsLabel}</p>}
+                      {bn.map((n, i) => <p key={i} className="text-base font-light" style={{ fontFamily: "Great Vibes, cursive", color: textColor }}>{n}</p>)}
+                    </div>
+                  )}
+                  {gn.length > 0 && (
+                    <div>
+                      {parentsConfig.groomParentsLabel && <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: mutedColor }}>{parentsConfig.groomParentsLabel}</p>}
+                      {gn.map((n, i) => <p key={i} className="text-base font-light" style={{ fontFamily: "Great Vibes, cursive", color: textColor }}>{n}</p>)}
+                    </div>
+                  )}
+                </div>
+              )}
+              {god.length > 0 && (
+                <div>
+                  <div className="h-px w-8 mx-auto mb-2" style={{ backgroundColor: event.cover_image ? "rgba(255,255,255,0.25)" : THEME.accent }} />
+                  {parentsConfig.godfathersLabel && <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: mutedColor }}>{parentsConfig.godfathersLabel}</p>}
+                  {god.map((n, i) => <p key={i} className="text-base font-light" style={{ fontFamily: "Great Vibes, cursive", color: textColor }}>{n}</p>)}
+                </div>
+              )}
+            </motion.div>
+          );
+        })()}
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
@@ -490,8 +535,10 @@ export default function LeavesInvitationPage({
 }: Props) {
   const [modal, setModal] = useState<string | null>(null);
 
-  const active = modules.filter((m) => m.is_active && m.type !== "music");
+  const active = modules.filter((m) => m.is_active && m.type !== "music" && m.type !== "parents");
   const musicMod = modules.find((m) => m.type === "music" && m.is_active);
+  const parentsMod = modules.find((m) => m.type === "parents" && m.is_active);
+  const parentsConfig = parentsMod?.config as ParentsConfig | undefined;
 
   return (
     <>
@@ -515,7 +562,7 @@ export default function LeavesInvitationPage({
 
         {musicMod && <MusicModule module={musicMod} theme={THEME} audioRef={audioRef} />}
 
-        <LeavesHero event={event} participant={participant} />
+        <LeavesHero event={event} participant={participant} parentsConfig={parentsConfig} />
 
         {active.map((mod) => (
           <div key={mod.id}>

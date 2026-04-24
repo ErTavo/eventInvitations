@@ -118,7 +118,9 @@ export default function InvitationPage({ event, participant, modules, isPreview 
   const getModule = (type: string) => modules.find((m) => m.type === type && m.is_active);
   const musicModule = getModule("music");
   const musicCfg = musicModule?.config as { musicUrl?: string } | undefined;
-  const hasCover    = !!event.cover_image;
+  const hasCover      = !!event.cover_image;
+  const parentsModule = getModule("parents");
+  const parentsConfig = parentsModule?.config as Parameters<typeof HeroSection>[0]["parentsConfig"];
 
   function handleEnvelopeOpen() {
     setOpened(true);
@@ -128,9 +130,9 @@ export default function InvitationPage({ event, participant, modules, isPreview 
   }
 
   // Build module list respecting DB order (drag & drop in dashboard)
-  // Music floats as a button — skip it here
+  // Music floats as a button; parents renders inside the hero — both excluded here
   const activeModules = modules
-    .filter((m) => m.is_active && m.type !== "music")
+    .filter((m) => m.is_active && m.type !== "music" && m.type !== "parents")
     .map((m): { key: string; el: React.ReactNode } | null => {
       switch (m.type) {
         case "countdown":    return { key: m.id, el: <CountdownModule event={event} theme={theme} /> };
@@ -186,12 +188,12 @@ export default function InvitationPage({ event, participant, modules, isPreview 
           <MusicModule module={musicModule} theme={theme} audioRef={audioRef} />
         )}
 
-        <HeroSection event={event} participant={participant} theme={theme} />
+        <HeroSection event={event} participant={participant} theme={theme} parentsConfig={parentsConfig} />
 
         {/* When there's a cover photo the hero shows only the photo.
             The invitation card with decorations appears here as a separate section. */}
         {hasCover && isBotanical && (
-          <BotanicalInvitationCard event={event} participant={participant} theme={theme} />
+          <BotanicalInvitationCard event={event} participant={participant} theme={theme} parentsConfig={parentsConfig} />
         )}
         {hasCover && !isBotanical && (
           <section className={`py-16 ${theme.sectionClass}`}>

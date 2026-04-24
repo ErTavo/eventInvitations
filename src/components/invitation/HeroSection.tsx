@@ -5,10 +5,21 @@ import type { Event, Participant } from "@/lib/supabase/types";
 import type { ThemeConfig } from "./themes";
 import { formatDate } from "@/lib/utils";
 
+interface ParentsConfig {
+  sectionTitle?: string;
+  brideParentsLabel?: string;
+  brideParentNames?: string[];
+  groomParentsLabel?: string;
+  groomParentNames?: string[];
+  godfathersLabel?: string;
+  godfatherNames?: string[];
+}
+
 interface Props {
   event: Event;
   participant: Participant;
   theme: ThemeConfig;
+  parentsConfig?: ParentsConfig;
 }
 
 // ─── Watercolor splashes ───────────────────────────────────────────────────────
@@ -116,12 +127,20 @@ function GoldenArch({ color, children }: { color: string; children: React.ReactN
 // ─── Invitation text content (shared between card section and no-cover hero) ──
 function InvitationContent({
   event, participant, theme,
-  headingColor, subColor, mutedColor, dividerColor,
+  headingColor, subColor, mutedColor, dividerColor, parentsConfig,
 }: {
   event: Event; participant: Participant; theme: ThemeConfig;
   headingColor: string; subColor: string; mutedColor: string; dividerColor: string;
+  parentsConfig?: ParentsConfig;
 }) {
   const isBotanical = theme.layoutVariant === "botanical";
+  const brideNames     = parentsConfig?.brideParentNames  ?? [];
+  const groomNames     = parentsConfig?.groomParentNames  ?? [];
+  const godfatherNames = parentsConfig?.godfatherNames    ?? [];
+  const hasParents     = brideNames.length > 0 || groomNames.length > 0;
+  const hasGodparents  = godfatherNames.length > 0;
+  const showParents    = !!parentsConfig && (hasParents || hasGodparents);
+
   return (
     <div className="space-y-4 w-full text-center">
       <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1 }}
@@ -180,13 +199,75 @@ function InvitationContent({
 
       <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 1.8 }}
         className="w-16 h-px mx-auto" style={{ backgroundColor: dividerColor }}/>
+
+      {/* Parents & godparents — inline in hero */}
+      {showParents && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 2.2, duration: 0.7 }}
+          className="pt-2 space-y-4"
+        >
+          {hasParents && (
+            <div className="grid grid-cols-2 gap-4">
+              {brideNames.length > 0 && (
+                <div className="space-y-1">
+                  {parentsConfig?.brideParentsLabel && (
+                    <p className="text-[10px] tracking-widest uppercase mb-2" style={{ color: subColor, opacity: 0.7 }}>
+                      {parentsConfig.brideParentsLabel}
+                    </p>
+                  )}
+                  {brideNames.map((n, i) => (
+                    <p key={i} className="text-lg font-light leading-snug"
+                       style={{ fontFamily: "Great Vibes, cursive", color: headingColor }}>
+                      {n}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {groomNames.length > 0 && (
+                <div className="space-y-1">
+                  {parentsConfig?.groomParentsLabel && (
+                    <p className="text-[10px] tracking-widest uppercase mb-2" style={{ color: subColor, opacity: 0.7 }}>
+                      {parentsConfig.groomParentsLabel}
+                    </p>
+                  )}
+                  {groomNames.map((n, i) => (
+                    <p key={i} className="text-lg font-light leading-snug"
+                       style={{ fontFamily: "Great Vibes, cursive", color: headingColor }}>
+                      {n}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasGodparents && (
+            <div className="space-y-1">
+              <div className="h-px w-10 mx-auto" style={{ backgroundColor: dividerColor, opacity: 0.35 }} />
+              {parentsConfig?.godfathersLabel && (
+                <p className="text-[10px] tracking-widest uppercase" style={{ color: subColor, opacity: 0.7 }}>
+                  {parentsConfig.godfathersLabel}
+                </p>
+              )}
+              {godfatherNames.map((n, i) => (
+                <p key={i} className="text-lg font-light leading-snug"
+                   style={{ fontFamily: "Great Vibes, cursive", color: headingColor }}>
+                  {n}
+                </p>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }
 
 // ─── BotanicalInvitationCard ───────────────────────────────────────────────────
 // Exported so InvitationPage can render it as a separate section after a cover photo.
-export function BotanicalInvitationCard({ event, participant, theme }: Props) {
+export function BotanicalInvitationCard({ event, participant, theme, parentsConfig }: Props) {
   return (
     <section className={`relative py-16 overflow-hidden ${theme.sectionClass}`}>
       <WatercolorSplashes />
@@ -200,6 +281,7 @@ export function BotanicalInvitationCard({ event, participant, theme }: Props) {
             event={event} participant={participant} theme={theme}
             headingColor={theme.primary} subColor={theme.accent}
             mutedColor={theme.primary} dividerColor={theme.accent}
+            parentsConfig={parentsConfig}
           />
         </GoldenArch>
       </div>
@@ -208,7 +290,7 @@ export function BotanicalInvitationCard({ event, participant, theme }: Props) {
 }
 
 // ─── Default export: HeroSection ──────────────────────────────────────────────
-export default function HeroSection({ event, participant, theme }: Props) {
+export default function HeroSection({ event, participant, theme, parentsConfig }: Props) {
   const isBotanical = theme.layoutVariant === "botanical";
   const hasCover    = !!event.cover_image;
 
@@ -270,6 +352,7 @@ export default function HeroSection({ event, participant, theme }: Props) {
               event={event} participant={participant} theme={theme}
               headingColor={theme.primary} subColor={theme.accent}
               mutedColor={theme.primary} dividerColor={theme.accent}
+              parentsConfig={parentsConfig}
             />
           </GoldenArch>
         </div>
@@ -293,6 +376,7 @@ export default function HeroSection({ event, participant, theme }: Props) {
           event={event} participant={participant} theme={theme}
           headingColor={theme.primary} subColor={theme.accent}
           mutedColor={theme.primary} dividerColor={theme.accent}
+          parentsConfig={parentsConfig}
         />
       </div>
       <motion.div
