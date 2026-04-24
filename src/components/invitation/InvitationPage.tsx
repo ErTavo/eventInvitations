@@ -105,31 +105,37 @@ export default function InvitationPage({ event, participant, modules, isPreview 
     }
   }
 
-  // Collect active module slots (excluding music which floats)
-  const activeModules = [
-    getModule("countdown")  && { key: "countdown",  el: <CountdownModule event={event} theme={theme} /> },
-    getModule("carousel")   && { key: "carousel",   el: <CarouselModule module={getModule("carousel")!} theme={theme} /> },
-    getModule("itinerary")  && { key: "itinerary",  el: <ItineraryModule module={getModule("itinerary")!} theme={theme} /> },
-    getModule("dress_code") && { key: "dress_code", el: <DressCodeModule module={getModule("dress_code")!} theme={theme} /> },
-    getModule("map")        && { key: "map",        el: <MapModule module={getModule("map")!} event={event} theme={theme} /> },
-    getModule("gifts")      && { key: "gifts",      el: <GiftsModule module={getModule("gifts")!} theme={theme} /> },
-    getModule("parents")       && { key: "parents",       el: <ParentsModule module={getModule("parents")!} theme={theme} /> },
-    getModule("envelope_rain") && { key: "envelope_rain", el: <EnvelopeRainModule module={getModule("envelope_rain")!} theme={theme} /> },
-    (getModule("rsvp") && !isPreview) && {
-      key: "rsvp",
-      el: <RsvpModule participant={participant} theme={theme} />,
-    },
-    (getModule("rsvp") && isPreview) && {
-      key: "rsvp-preview",
-      el: (
-        <section className={`py-16 ${theme.sectionClass}`}>
-          <div className={`max-w-md mx-auto px-6 text-center border-2 border-dashed rounded py-10 ${theme.dividerClass}`}>
-            <p className={`text-sm ${theme.mutedClass}`}>Aquí aparecerá la sección de confirmación de asistencia</p>
-          </div>
-        </section>
-      ),
-    },
-  ].filter(Boolean) as { key: string; el: React.ReactNode }[];
+  // Build module list respecting DB order (drag & drop in dashboard)
+  // Music floats as a button — skip it here
+  const activeModules = modules
+    .filter((m) => m.is_active && m.type !== "music")
+    .map((m): { key: string; el: React.ReactNode } | null => {
+      switch (m.type) {
+        case "countdown":    return { key: m.id, el: <CountdownModule event={event} theme={theme} /> };
+        case "carousel":     return { key: m.id, el: <CarouselModule module={m} theme={theme} /> };
+        case "gallery":      return { key: m.id, el: <CarouselModule module={m} theme={theme} /> };
+        case "itinerary":    return { key: m.id, el: <ItineraryModule module={m} theme={theme} /> };
+        case "dress_code":   return { key: m.id, el: <DressCodeModule module={m} theme={theme} /> };
+        case "map":          return { key: m.id, el: <MapModule module={m} event={event} theme={theme} /> };
+        case "gifts":        return { key: m.id, el: <GiftsModule module={m} theme={theme} /> };
+        case "parents":      return { key: m.id, el: <ParentsModule module={m} theme={theme} /> };
+        case "envelope_rain":return { key: m.id, el: <EnvelopeRainModule module={m} theme={theme} /> };
+        case "rsvp":
+          if (isPreview) return {
+            key: m.id,
+            el: (
+              <section className={`py-16 ${theme.sectionClass}`}>
+                <div className={`max-w-md mx-auto px-6 text-center border-2 border-dashed rounded py-10 ${theme.dividerClass}`}>
+                  <p className={`text-sm ${theme.mutedClass}`}>Aquí aparecerá la confirmación de asistencia</p>
+                </div>
+              </section>
+            ),
+          };
+          return { key: m.id, el: <RsvpModule participant={participant} theme={theme} /> };
+        default: return null;
+      }
+    })
+    .filter(Boolean) as { key: string; el: React.ReactNode }[];
 
   return (
     <>
