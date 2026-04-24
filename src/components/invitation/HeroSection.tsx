@@ -172,10 +172,23 @@ function InvitationContent({
         )}
       </motion.div>
 
-      <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.8 }}
-        className="text-3xl md:text-5xl font-light leading-tight" style={{ color: headingColor }}>
-        {event.name}
-      </motion.h1>
+      {event.style.eventType === "wedding" && event.style.person1Name && event.style.person2Name ? (
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.8 }}
+          className="space-y-0 leading-none">
+          <p className="text-3xl md:text-5xl" style={{ fontFamily: "Great Vibes, cursive", color: headingColor }}>
+            {event.style.person1Name}
+          </p>
+          <p className="text-xl md:text-2xl font-light py-1" style={{ color: dividerColor }}>&amp;</p>
+          <p className="text-3xl md:text-5xl" style={{ fontFamily: "Great Vibes, cursive", color: headingColor }}>
+            {event.style.person2Name}
+          </p>
+        </motion.div>
+      ) : (
+        <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.8 }}
+          className="text-3xl md:text-5xl font-light leading-tight" style={{ color: headingColor }}>
+          {event.name}
+        </motion.h1>
+      )}
 
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
         className="text-sm md:text-base tracking-widest uppercase" style={{ color: subColor }}>

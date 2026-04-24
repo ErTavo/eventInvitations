@@ -19,15 +19,20 @@ export type AttendanceStatus = "pending" | "confirmed" | "declined";
 
 export type ThemeId = "vintage" | "elegant" | "modern" | "floral" | "minimal" | "leaves" | "custom";
 
+export type EventType = "general" | "wedding" | "quinceanera" | "birthday";
+
 export interface EventStyle {
   theme: ThemeId;
-  primaryColor: string;   // headings, buttons, accents
-  secondaryColor: string; // page background
-  accentColor: string;    // dividers, borders, muted elements
-  textColor: string;      // body text
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  textColor: string;
   fontFamily: string;
   backgroundImage?: string;
-  sealInitials?: string;  // up to 2 initials shown on the wax seal (elegant theme)
+  sealInitials?: string;
+  eventType?: EventType;
+  person1Name?: string; // bride / quinceañera / birthday person
+  person2Name?: string; // groom (weddings only)
 }
 
 export interface ModuleConfig {

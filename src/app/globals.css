@@ -70,10 +70,47 @@
   --bg: #ffffff;
 }
 
-/* Paper texture overlay — used by the elegant/botanical template.
-   Adds a subtle fractal noise grain on top of the parchment base color. */
+/* Paper texture — elegant/botanical template */
 .paper-texture {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.76 0 0 0 0 0.66 0 0 0 0 0.52 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 400px 400px;
+}
+
+/* Linen texture — hojas/leaves template
+   Simulates a woven fabric weave with horizontal and vertical threads. */
+.linen-texture {
+  background-image:
+    /* Horizontal threads */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(90, 122, 74, 0.045) 3px,
+      rgba(90, 122, 74, 0.045) 4px
+    ),
+    /* Vertical threads */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(90, 122, 74, 0.035) 3px,
+      rgba(90, 122, 74, 0.035) 4px
+    ),
+    /* Coarser horizontal weave */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 11px,
+      rgba(90, 122, 74, 0.025) 11px,
+      rgba(90, 122, 74, 0.025) 12px
+    ),
+    /* Coarser vertical weave */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 11px,
+      rgba(90, 122, 74, 0.02) 11px,
+      rgba(90, 122, 74, 0.02) 12px
+    );
 }

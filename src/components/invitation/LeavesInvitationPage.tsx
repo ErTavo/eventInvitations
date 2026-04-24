@@ -246,18 +246,18 @@ function LeavesModal({ open, onClose, title, children }: {
         <>
           <motion.div key="modal-bg" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+          <motion.div
+            key="modal-wrapper"
+            className="fixed inset-0 z-[90] flex items-center justify-center p-4 pointer-events-none"
+          >
           <motion.div key="modal-content"
-            initial={{ opacity: 0, y: 40, scale: 0.97 }}
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-x-4 bottom-0 z-[90] max-w-lg mx-auto rounded-t-2xl overflow-hidden shadow-2xl md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:bottom-auto"
+            className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl pointer-events-auto"
             style={{ backgroundColor: THEME.secondary, fontFamily: "Cormorant Garamond, serif" }}
           >
-            {/* Handle bar (mobile) */}
-            <div className="flex justify-center pt-3 pb-1 md:hidden">
-              <div className="w-10 h-1 rounded-full bg-stone-300" />
-            </div>
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: THEME.accent + "50" }}>
               <p className="text-sm tracking-widest uppercase" style={{ color: THEME.primary }}>{title}</p>
@@ -269,6 +269,7 @@ function LeavesModal({ open, onClose, title, children }: {
             </div>
             {/* Body */}
             <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">{children}</div>
+          </motion.div>
           </motion.div>
         </>
       )}
@@ -399,11 +400,24 @@ function LeavesHero({ event, participant, parentsConfig }: { event: Event; parti
         <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.65, duration: 0.6 }}
           className="w-10 h-px mx-auto" style={{ backgroundColor: event.cover_image ? "#c8a951" : THEME.accent }} />
 
-        <motion.h1 initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.7 }}
-          className="text-4xl md:text-6xl font-light leading-tight"
-          style={{ fontFamily: "Great Vibes, cursive", color: event.cover_image ? "#fff" : THEME.primary }}>
-          {event.name}
-        </motion.h1>
+      {event.style.eventType === "wedding" && event.style.person1Name && event.style.person2Name ? (
+          <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.7 }}
+            className="leading-none space-y-0">
+            <p className="text-4xl md:text-6xl" style={{ fontFamily: "Great Vibes, cursive", color: event.cover_image ? "#fff" : THEME.primary }}>
+              {event.style.person1Name}
+            </p>
+            <p className="text-2xl font-light py-1" style={{ color: event.cover_image ? "rgba(255,255,255,0.7)" : THEME.accent }}>&amp;</p>
+            <p className="text-4xl md:text-6xl" style={{ fontFamily: "Great Vibes, cursive", color: event.cover_image ? "#fff" : THEME.primary }}>
+              {event.style.person2Name}
+            </p>
+          </motion.div>
+        ) : (
+          <motion.h1 initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.7 }}
+            className="text-4xl md:text-6xl font-light leading-tight"
+            style={{ fontFamily: "Great Vibes, cursive", color: event.cover_image ? "#fff" : THEME.primary }}>
+            {event.name}
+          </motion.h1>
+        )}
 
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}
           className="text-base tracking-widest uppercase"
@@ -549,7 +563,7 @@ export default function LeavesInvitationPage({
 
       {/* Main invitation */}
       <motion.div
-        className="min-h-screen" style={{ backgroundColor: THEME.secondary, fontFamily: "Cormorant Garamond, serif" }}
+        className="min-h-screen linen-texture" style={{ backgroundColor: THEME.secondary, fontFamily: "Cormorant Garamond, serif" }}
         initial={isPreview ? false : { opacity: 0 }}
         animate={isPreview || envelopeOpened ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.8 }}

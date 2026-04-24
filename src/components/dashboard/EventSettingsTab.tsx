@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import type { Event, EventStyle, ThemeId } from "@/lib/supabase/types";
+import type { Event, EventStyle, ThemeId, EventType } from "@/lib/supabase/types";
 import ImageUpload from "@/components/ui/ImageUpload";
 
 interface Props { event: Event }
@@ -92,9 +92,13 @@ export default function EventSettingsTab({ event }: Props) {
   const [textColor,      setTextColor]      = useState(event.style.textColor      ?? "#2c2c2c");
   const [fontFamily,     setFontFamily]     = useState(event.style.fontFamily     ?? "Cormorant Garamond");
   const [sealInitials,   setSealInitials]   = useState(event.style.sealInitials   ?? "");
+  const [eventType,      setEventType]      = useState<EventType>(event.style.eventType ?? "general");
+  const [person1Name,    setPerson1Name]    = useState(event.style.person1Name   ?? "");
+  const [person2Name,    setPerson2Name]    = useState(event.style.person2Name   ?? "");
 
   const isCustom    = selectedTheme === "custom";
   const isElegant   = selectedTheme === "elegant";
+  const isWedding   = eventType === "wedding";
 
   function applyPreset(t: typeof PRESET_THEMES[number]) {
     setSelectedTheme(t.id);
@@ -134,6 +138,9 @@ export default function EventSettingsTab({ event }: Props) {
       accentColor,
       textColor,
       fontFamily,
+      eventType,
+      ...(person1Name.trim() ? { person1Name: person1Name.trim() } : {}),
+      ...(person2Name.trim() ? { person2Name: person2Name.trim() } : {}),
       ...(isElegant && sealInitials.trim()
         ? { sealInitials: sealInitials.trim().slice(0, 2) }
         : {}),
@@ -151,10 +158,64 @@ export default function EventSettingsTab({ event }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-xl space-y-5 bg-white border border-stone-200 rounded p-6">
 
+      {/* ── Event type ── */}
+      <div>
+        <label className="block text-sm font-medium text-stone-700 mb-2">Tipo de evento</label>
+        <div className="grid grid-cols-4 gap-2">
+          {([
+            { id: "general",     label: "General",     emoji: "🎉" },
+            { id: "wedding",     label: "Boda",        emoji: "💍" },
+            { id: "quinceanera", label: "Quinceaños",  emoji: "👑" },
+            { id: "birthday",    label: "Cumpleaños",  emoji: "🎂" },
+          ] as { id: EventType; label: string; emoji: string }[]).map((t) => (
+            <button key={t.id} type="button" onClick={() => setEventType(t.id)}
+              className={`rounded border-2 py-2 text-center transition-all ${eventType === t.id ? "border-stone-800 bg-stone-50 shadow-sm" : "border-stone-200 hover:border-stone-400"}`}>
+              <p className="text-lg">{t.emoji}</p>
+              <p className="text-xs text-stone-600 mt-0.5">{t.label}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Wedding names */}
+      {isWedding && (
+        <div className="bg-stone-50 border border-stone-200 rounded p-4 space-y-3">
+          <p className="text-xs text-stone-500 tracking-wide uppercase">Nombres de la pareja</p>
+          <p className="text-xs text-stone-400">Se mostrarán en la invitación con un &amp; entre ellos, en lugar del nombre del evento.</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-stone-600 mb-1">Novia / Persona 1</label>
+              <input value={person1Name} onChange={(e) => setPerson1Name(e.target.value)}
+                placeholder="Ana García"
+                className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-stone-600 mb-1">Novio / Persona 2</label>
+              <input value={person2Name} onChange={(e) => setPerson2Name(e.target.value)}
+                placeholder="Carlos López"
+                className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
+            </div>
+          </div>
+          {/* Live preview */}
+          {(person1Name || person2Name) && (
+            <div className="text-center pt-1 pb-2">
+              <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: primaryColor }}>
+                {person1Name || "Novia"}
+              </p>
+              <p className="text-xl font-light" style={{ color: accentColor }}>&amp;</p>
+              <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: primaryColor }}>
+                {person2Name || "Novio"}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Basic info ── */}
       <div>
-        <label className="block text-sm font-medium text-stone-700 mb-1">Nombre</label>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Nombre del evento</label>
         <input {...register("name")} className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
+        {isWedding && <p className="text-xs text-stone-400 mt-1">Se usa en el dashboard y URL. En la invitación se muestran los nombres de la pareja.</p>}
       </div>
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-1">Fecha y hora</label>
