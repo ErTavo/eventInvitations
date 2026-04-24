@@ -39,7 +39,9 @@ create type module_type as enum (
   'gallery',
   'dress_code',
   'itinerary',
-  'gifts'
+  'gifts',
+  'parents',
+  'envelope_rain'
 );
 
 create table if not exists modules (
@@ -130,14 +132,16 @@ create or replace function create_default_modules(p_event_id uuid)
 returns void language plpgsql as $$
 begin
   insert into modules (event_id, type, is_active, "order", config) values
-    (p_event_id, 'carousel',   false, 1,  '{}'),
-    (p_event_id, 'countdown',  true,  2,  '{}'),
-    (p_event_id, 'music',      false, 3,  '{}'),
-    (p_event_id, 'itinerary',  false, 4,  '{}'),
-    (p_event_id, 'dress_code', false, 5,  '{}'),
-    (p_event_id, 'map',        false, 6,  '{}'),
-    (p_event_id, 'gifts',      false, 7,  '{}'),
-    (p_event_id, 'rsvp',       true,  8,  '{}')
+    (p_event_id, 'carousel',      false, 1,  '{}'),
+    (p_event_id, 'countdown',     true,  2,  '{}'),
+    (p_event_id, 'music',         false, 3,  '{}'),
+    (p_event_id, 'itinerary',     false, 4,  '{}'),
+    (p_event_id, 'dress_code',    false, 5,  '{}'),
+    (p_event_id, 'map',           false, 6,  '{}'),
+    (p_event_id, 'gifts',         false, 7,  '{}'),
+    (p_event_id, 'parents',       false, 8,  '{"sectionTitle":"Nuestros padres","brideParentsLabel":"Padres de la novia","brideParentNames":[],"groomParentsLabel":"Padres del novio","groomParentNames":[],"godfathersLabel":"Nuestros padrinos","godfatherNames":[]}'),
+    (p_event_id, 'envelope_rain', false, 9,  '{"envelopeRainDescription":"Tu presencia es el mejor regalo. Si deseas hacernos un obsequio, puedes hacerlo a través de:","envelopeRainAccounts":[]}'),
+    (p_event_id, 'rsvp',          true,  10, '{}')
   on conflict (event_id, type) do nothing;
 end;
 $$;

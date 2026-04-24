@@ -4,10 +4,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Event, Module, ModuleType } from "@/lib/supabase/types";
-import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, Plus } from "lucide-react";
+import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, Plus, GripVertical } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import AudioUpload from "@/components/ui/AudioUpload";
 import Image from "next/image";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const MODULE_LABELS: Record<ModuleType, string> = {
   carousel:   "Carrusel de imágenes",
@@ -39,15 +54,136 @@ const MODULE_ICONS: Record<ModuleType, string> = {
 
 interface Props { event: Event; modules: Module[] }
 
+// ── Sortable module card wrapper ─────────────────────────────────────────────
+function SortableModuleCard({
+  mod,
+  expanded,
+  onToggle,
+  onExpand,
+  onSave,
+}: {
+  mod: Module;
+  expanded: boolean;
+  onToggle: () => void;
+  onExpand: () => void;
+  onSave: (cfg: Record<string, unknown>) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: mod.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white border border-stone-200 rounded overflow-hidden"
+    >
+      <div className="flex items-center justify-between px-4 py-3">
+        {/* Drag handle */}
+        <button
+          {...attributes}
+          {...listeners}
+          className="text-stone-300 hover:text-stone-500 transition-colors cursor-grab active:cursor-grabbing mr-2 shrink-0 touch-none"
+          aria-label="Reordenar"
+        >
+          <GripVertical size={18} />
+        </button>
+
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-lg shrink-0">{MODULE_ICONS[mod.type as ModuleType] ?? "📦"}</span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-stone-800 truncate">
+              {MODULE_LABELS[mod.type as ModuleType] ?? mod.type}
+            </p>
+            <p className="text-xs text-stone-400">{mod.is_active ? "Activo" : "Inactivo"}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={onToggle} className="text-stone-500 hover:text-stone-800 transition-colors">
+            {mod.is_active
+              ? <ToggleRight size={24} className="text-stone-800" />
+              : <ToggleLeft size={24} />}
+          </button>
+          <button
+            onClick={onExpand}
+            className="text-stone-400 hover:text-stone-700"
+          >
+            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-stone-100 px-4 py-4">
+          {mod.is_active ? (
+            <ModuleConfigEditor mod={mod} onSave={onSave} />
+          ) : (
+            <p className="text-xs text-stone-400 italic">
+              Activa el módulo para configurarlo.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ModulesTab({ event, modules: initial }: Props) {
   const router = useRouter();
   const [modules, setModules] = useState(initial);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addingParents,      setAddingParents]      = useState(false);
   const [addingEnvelopeRain, setAddingEnvelopeRain] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const hasParents      = modules.some((m) => m.type === "parents");
   const hasEnvelopeRain = modules.some((m) => m.type === "envelope_rain");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
+  );
+
+  async function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = modules.findIndex((m) => m.id === active.id);
+    const newIndex = modules.findIndex((m) => m.id === over.id);
+    const reordered = arrayMove(modules, oldIndex, newIndex).map((m, i) => ({
+      ...m,
+      order: i + 1,
+    }));
+
+    setModules(reordered);
+    setSaving(true);
+
+    // Persist new order for each moved module
+    await Promise.all(
+      reordered.map((m, i) =>
+        fetch(`/api/modules/${m.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: i + 1 }),
+        })
+      )
+    );
+
+    setSaving(false);
+    router.refresh();
+  }
 
   async function toggle(mod: Module) {
     const newActive = !mod.is_active;
@@ -120,42 +256,25 @@ export default function ModulesTab({ event, modules: initial }: Props) {
 
   return (
     <div className="space-y-3">
-      {modules.map((mod) => (
-        <div key={mod.id} className="bg-white border border-stone-200 rounded overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <span className="text-lg">{MODULE_ICONS[mod.type as ModuleType] ?? "📦"}</span>
-              <div>
-                <p className="text-sm font-medium text-stone-800">
-                  {MODULE_LABELS[mod.type as ModuleType] ?? mod.type}
-                </p>
-                <p className="text-xs text-stone-400">{mod.is_active ? "Activo" : "Inactivo"}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => toggle(mod)} className="text-stone-500 hover:text-stone-800 transition-colors">
-                {mod.is_active
-                  ? <ToggleRight size={24} className="text-stone-800" />
-                  : <ToggleLeft size={24} />}
-              </button>
-              {mod.is_active && (
-                <button
-                  onClick={() => setExpanded(expanded === mod.id ? null : mod.id)}
-                  className="text-stone-400 hover:text-stone-700"
-                >
-                  {expanded === mod.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                </button>
-              )}
-            </div>
-          </div>
+      {/* Saving indicator */}
+      {saving && (
+        <p className="text-xs text-stone-400 text-right animate-pulse">Guardando orden…</p>
+      )}
 
-          {expanded === mod.id && mod.is_active && (
-            <div className="border-t border-stone-100 px-4 py-4">
-              <ModuleConfigEditor mod={mod} onSave={(cfg) => saveConfig(mod, cfg)} />
-            </div>
-          )}
-        </div>
-      ))}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={modules.map((m) => m.id)} strategy={verticalListSortingStrategy}>
+          {modules.map((mod) => (
+            <SortableModuleCard
+              key={mod.id}
+              mod={mod}
+              expanded={expanded === mod.id}
+              onToggle={() => toggle(mod)}
+              onExpand={() => setExpanded(expanded === mod.id ? null : mod.id)}
+              onSave={(cfg) => saveConfig(mod, cfg)}
+            />
+          ))}
+        </SortableContext>
+      </DndContext>
 
       {/* Add parents module button */}
       {/* "+" buttons only for events created before these modules were auto-generated */}
