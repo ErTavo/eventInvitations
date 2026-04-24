@@ -2,7 +2,7 @@ import type { EventStyle, ThemeId } from "@/lib/supabase/types";
 
 export interface ThemeConfig {
   id: ThemeId;
-  layoutVariant?: "botanical"; // signals special rendering (elegant template)
+  layoutVariant?: "botanical" | "leaves";
   bgClass: string;
   sectionClass: string;
   headingClass: string;
@@ -19,7 +19,7 @@ export interface ThemeConfig {
   cssVars?: React.CSSProperties;
 }
 
-export const themeConfig: Record<Exclude<ThemeId, "custom">, ThemeConfig> = {
+export const themeConfig: Record<Exclude<ThemeId, "custom" | "leaves">, ThemeConfig> = {
   vintage: {
     id: "vintage",
     bgClass: "bg-[#fdf6ec]",
@@ -131,7 +131,26 @@ function buildCustomTheme(style: EventStyle): ThemeConfig {
   };
 }
 
+// Leaves theme: clean modern with forest green + gold + cream
+export const leavesTheme: ThemeConfig = {
+  id: "leaves",
+  layoutVariant: "leaves" as ThemeConfig["layoutVariant"],
+  bgClass: "bg-[#f8f5ef]",
+  sectionClass: "bg-[#f8f5ef]",
+  headingClass: "text-[#1e3a1f]",
+  textClass: "text-[#2c2c2c]",
+  mutedClass: "text-[#5a7a4a]",
+  accentClass: "text-[#5a7a4a]",
+  buttonClass: "bg-[#2c5f2e] hover:bg-[#1e4a20] text-white",
+  dividerClass: "border-[#a8c890]",
+  cardClass: "bg-white border border-[#c8dfc0]",
+  primary: "#2c5f2e",
+  secondary: "#f8f5ef",
+  accent: "#a8c890",
+};
+
 export function buildThemeConfig(style: EventStyle): ThemeConfig {
+  if (style.theme === "leaves") return leavesTheme;
   if (style.theme === "custom") return buildCustomTheme(style);
-  return themeConfig[style.theme] ?? themeConfig.elegant;
+  return (themeConfig as Record<string, ThemeConfig>)[style.theme] ?? themeConfig.elegant;
 }

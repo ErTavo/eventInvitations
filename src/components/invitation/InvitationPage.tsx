@@ -17,6 +17,7 @@ import GiftsModule from "./modules/GiftsModule";
 import RsvpModule from "./modules/RsvpModule";
 import ParentsModule from "./modules/ParentsModule";
 import EnvelopeRainModule from "./modules/EnvelopeRainModule";
+import LeavesInvitationPage from "./LeavesInvitationPage";
 
 interface Props {
   event: Event;
@@ -83,8 +84,30 @@ function BotanicalSectionDivider({ theme }: { theme: ThemeConfig }) {
 export default function InvitationPage({ event, participant, modules, isPreview = false }: Props) {
   const theme = buildThemeConfig(event.style);
   const [opened, setOpened] = useState(isPreview);
+  const [musicChosen, setMusicChosen] = useState(isPreview);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isBotanical = theme.layoutVariant === "botanical";
+  const isLeaves    = theme.layoutVariant === "leaves";
+
+  // Route to leaves-specific page
+  if (isLeaves) {
+    return (
+      <LeavesInvitationPage
+        event={event}
+        participant={participant}
+        modules={modules}
+        isPreview={isPreview}
+        audioRef={audioRef}
+        musicChosen={musicChosen}
+        onMusicEnter={(withMusic) => {
+          setMusicChosen(true);
+          if (withMusic && audioRef.current) {
+            audioRef.current.play().catch(() => {});
+          }
+        }}
+      />
+    );
+  }
 
   useEffect(() => {
     if (!isPreview && !participant.invitation_viewed) {

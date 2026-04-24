@@ -15,7 +15,7 @@ export type ModuleType =
 
 export type AttendanceStatus = "pending" | "confirmed" | "declined";
 
-export type ThemeId = "vintage" | "elegant" | "modern" | "floral" | "minimal" | "custom";
+export type ThemeId = "vintage" | "elegant" | "modern" | "floral" | "minimal" | "leaves" | "custom";
 
 export interface EventStyle {
   theme: ThemeId;

@@ -25,9 +25,11 @@ const PRESET_THEMES: {
   accent: string;
   textColor: string;
   font: string;
+  badge?: string;
 }[] = [
   { id: "vintage",  label: "Vintage",  primary: "#8b6c42", secondary: "#fdf6ec", accent: "#c9a96e", textColor: "#5a4030", font: "Cormorant Garamond" },
   { id: "elegant",  label: "Elegante", primary: "#2d4a22", secondary: "#f5f0e8", accent: "#c9a96e", textColor: "#2c2c2c", font: "Cormorant Garamond" },
+  { id: "leaves",   label: "Hojas",    primary: "#2c5f2e", secondary: "#f8f5ef", accent: "#a8c890", textColor: "#2c2c2c", font: "Cormorant Garamond", badge: "Nuevo" },
   { id: "modern",   label: "Moderno",  primary: "#9b5de5", secondary: "#ffffff", accent: "#c490f5", textColor: "#2d2d45", font: "Inter"              },
   { id: "floral",   label: "Floral",   primary: "#c2547a", secondary: "#fff9fb", accent: "#f4a5be", textColor: "#5a2a3d", font: "Cormorant Garamond" },
   { id: "minimal",  label: "Minimal",  primary: "#2d2d2d", secondary: "#ffffff", accent: "#888888", textColor: "#444444", font: "Inter"              },
@@ -178,15 +180,20 @@ export default function EventSettingsTab({ event }: Props) {
         {/* Preset themes */}
         <div>
           <p className="text-xs text-stone-500 mb-2 tracking-wide uppercase">Temas predefinidos</p>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {PRESET_THEMES.map((t) => {
               const active = selectedTheme === t.id;
               return (
                 <button key={t.id} type="button" onClick={() => applyPreset(t)}
-                  className={`rounded overflow-hidden border-2 transition-all text-center ${active ? "border-stone-800 shadow-md" : "border-stone-200 hover:border-stone-400"}`}
+                  className={`rounded overflow-hidden border-2 transition-all text-center relative ${active ? "border-stone-800 shadow-md" : "border-stone-200 hover:border-stone-400"}`}
                 >
+                  {t.badge && (
+                    <span className="absolute top-0.5 right-0.5 text-[9px] bg-emerald-500 text-white px-1 rounded-sm leading-4">
+                      {t.badge}
+                    </span>
+                  )}
                   <div className="h-10 flex items-center justify-center" style={{ backgroundColor: t.secondary }}>
-                    <div className="w-5 h-5 rounded-full border-2" style={{ backgroundColor: t.secondary, borderColor: t.primary, boxShadow: `inset 0 0 0 3px ${t.primary}` }} />
+                    <div className="w-5 h-5 rounded-full" style={{ backgroundColor: t.primary }} />
                   </div>
                   <div className="py-1.5 px-1 bg-white">
                     <span className="text-xs text-stone-600">{t.label}</span>
