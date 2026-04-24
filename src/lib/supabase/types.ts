@@ -23,6 +23,7 @@ export interface EventStyle {
   textColor: string;      // body text
   fontFamily: string;
   backgroundImage?: string;
+  sealInitials?: string;  // up to 2 initials shown on the wax seal (elegant theme)
 }
 
 export interface ModuleConfig {

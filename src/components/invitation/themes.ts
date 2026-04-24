@@ -2,6 +2,7 @@ import type { EventStyle, ThemeId } from "@/lib/supabase/types";
 
 export interface ThemeConfig {
   id: ThemeId;
+  layoutVariant?: "botanical"; // signals special rendering (elegant template)
   bgClass: string;
   sectionClass: string;
   headingClass: string;
@@ -34,20 +35,24 @@ export const themeConfig: Record<Exclude<ThemeId, "custom">, ThemeConfig> = {
     secondary: "#fdf6ec",
     accent: "#c9a96e",
   },
+  // ── Elegante — plantilla botánica inspirada en papelería verde oscura ───────
   elegant: {
     id: "elegant",
-    bgClass: "bg-[#fafaf8]",
-    sectionClass: "bg-[#fafaf8]",
-    headingClass: "text-[#2c2c2c]",
-    textClass: "text-[#444444]",
-    mutedClass: "text-[#888888]",
-    accentClass: "text-[#b8974a]",
-    buttonClass: "bg-[#b8974a] hover:bg-[#a07a35] text-white",
-    dividerClass: "border-[#d4b896]",
-    cardClass: "bg-white border border-[#e8e0d0]",
-    primary: "#b8974a",
-    secondary: "#fafaf8",
-    accent: "#d4b896",
+    layoutVariant: "botanical",
+    // Fondo: pergamino con textura de papel (bg-color + noise overlay via CSS)
+    bgClass: "bg-[#f5f0e8] paper-texture",
+    // Secciones transparentes para que la textura del padre se vea continua
+    sectionClass: "bg-transparent",
+    headingClass: "text-[#1e3314]",
+    textClass: "text-[#2c2c2c]",
+    mutedClass: "text-[#5a7a4a]",
+    accentClass: "text-[#c9a96e]",
+    buttonClass: "bg-[#2d4a22] hover:bg-[#1e3314] text-white",
+    dividerClass: "border-[#c9a96e]",
+    cardClass: "bg-[#faf6ee] border border-[#c9a96e]",
+    primary: "#2d4a22",   // verde bosque
+    secondary: "#f5f0e8", // pergamino
+    accent: "#c9a96e",    // dorado
   },
   modern: {
     id: "modern",

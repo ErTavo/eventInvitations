@@ -18,6 +18,18 @@ function delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
+// Small botanical branch SVG used on the envelope body (botanical variant only)
+function EnvelopeBranch() {
+  return (
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+      <path d="M6 44 Q14 30 24 20 Q32 12 40 6"
+            stroke="#c9a96e" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+      <path d="M24 20 Q33 24 36 16" stroke="#c9a96e" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+      <path d="M32 12 Q38 18 43 14" stroke="#c9a96e" strokeWidth="1" strokeLinecap="round" opacity="0.4"/>
+    </svg>
+  );
+}
+
 export default function EnvelopeIntro({ event, participant, theme, onOpen }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
 
@@ -35,10 +47,21 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
     onOpen();
   }
 
-  // Slightly darker version of primary for envelope body
-  const envBody   = theme.secondary;
-  const envBorder = theme.accent;
-  const envPrimary = theme.primary;
+  const isBotanical = theme.layoutVariant === "botanical";
+
+  // ── Color palette depending on variant ───────────────────────────────────
+  // Botanical: dark forest-green envelope on deep-green screen
+  // Default:   light envelope matching the invitation background
+  const screenBg   = isBotanical ? "#142209" : theme.secondary;
+  const envBody    = isBotanical ? "#2d4a22" : theme.secondary;
+  const envBorder  = isBotanical ? "#c9a96e" : theme.accent;
+  const cardBg     = isBotanical ? "#f5f0e8" : theme.secondary;
+  const cardText   = isBotanical ? "#1e3314" : theme.primary;
+  const hintColor  = isBotanical ? "#c9a96e" : theme.primary;
+  const sealBg     = isBotanical ? "#c9a96e" : theme.primary;
+  const sealFg     = isBotanical ? "#142209" : "#fff";
+
+  const sealInitials = event.style.sealInitials?.trim().slice(0, 2) ?? "";
 
   return (
     <AnimatePresence>
@@ -49,7 +72,10 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7 }}
           className="fixed inset-0 z-[70] flex flex-col items-center justify-center select-none"
-          style={{ backgroundColor: theme.secondary, fontFamily: event.style.fontFamily || "Cormorant Garamond, serif" }}
+          style={{
+            backgroundColor: screenBg,
+            fontFamily: event.style.fontFamily || "Cormorant Garamond, serif",
+          }}
           onClick={handleClick}
         >
           {/* Top hint */}
@@ -57,48 +83,49 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
             {phase === "idle" && (
               <motion.p
                 initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+                animate={{ opacity: 0.75, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ delay: 0.6 }}
                 className="text-xs tracking-widest uppercase mb-10"
-                style={{ color: envPrimary, opacity: 0.6 }}
+                style={{ color: hintColor }}
               >
                 Tienes una invitación
               </motion.p>
             )}
           </AnimatePresence>
 
-          {/* Envelope wrapper — perspective for 3-D flap */}
+          {/* ── Envelope wrapper — perspective for 3-D flap ── */}
           <div className="relative" style={{ width: 300, height: 210, perspective: 800 }}>
 
-            {/* ── Envelope body ── */}
+            {/* Envelope body */}
             <div
               className="absolute inset-0 rounded-b-lg shadow-xl overflow-hidden"
               style={{ backgroundColor: envBody, border: `1.5px solid ${envBorder}` }}
             >
-              {/* Bottom-left fold line */}
-              <div
-                className="absolute bottom-0 left-0 w-0 h-0"
-                style={{
-                  borderRight: `150px solid transparent`,
-                  borderBottom: `105px solid ${envBorder}22`,
-                }}
-              />
-              {/* Bottom-right fold line */}
-              <div
-                className="absolute bottom-0 right-0 w-0 h-0"
-                style={{
-                  borderLeft: `150px solid transparent`,
-                  borderBottom: `105px solid ${envBorder}22`,
-                }}
-              />
+              {/* Bottom fold lines */}
+              <div className="absolute bottom-0 left-0 w-0 h-0"
+                style={{ borderRight: "150px solid transparent", borderBottom: `105px solid ${envBorder}22` }} />
+              <div className="absolute bottom-0 right-0 w-0 h-0"
+                style={{ borderLeft: "150px solid transparent", borderBottom: `105px solid ${envBorder}22` }} />
+
+              {/* Botanical corner detail (botanical only) */}
+              {isBotanical && (
+                <>
+                  <div className="absolute bottom-2 left-2 opacity-60">
+                    <EnvelopeBranch />
+                  </div>
+                  <div className="absolute bottom-2 right-2 opacity-60" style={{ transform: "scaleX(-1)" }}>
+                    <EnvelopeBranch />
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* ── Letter / card rising from envelope ── */}
+            {/* ── Card rising from envelope ── */}
             <motion.div
               className="absolute left-4 right-4 rounded shadow-lg flex flex-col items-center justify-center gap-2 overflow-hidden pointer-events-none"
               style={{
-                backgroundColor: envBody,
+                backgroundColor: cardBg,
                 border: `1px solid ${envBorder}`,
                 bottom: 12,
                 height: 160,
@@ -107,52 +134,56 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
               animate={isRising ? { y: -130, opacity: 1 } : { y: 0, opacity: 0 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              <p
-                className="text-xs tracking-widest uppercase"
-                style={{ color: envPrimary, opacity: 0.5 }}
-              >
+              {/* Gold accent lines on card edges (botanical only) */}
+              {isBotanical && (
+                <>
+                  <div className="absolute top-0 left-4 right-4 h-px" style={{ backgroundColor: envBorder, opacity: 0.45 }} />
+                  <div className="absolute bottom-0 left-4 right-4 h-px" style={{ backgroundColor: envBorder, opacity: 0.45 }} />
+                </>
+              )}
+
+              <p className="text-xs tracking-widest uppercase" style={{ color: cardText, opacity: 0.5 }}>
                 Para
               </p>
               <p
                 className="text-2xl text-center px-4 leading-tight"
-                style={{ color: envPrimary, fontFamily: "Great Vibes, cursive" }}
+                style={{ color: cardText, fontFamily: "Great Vibes, cursive" }}
               >
                 {participant.name}
               </p>
               <div className="w-10 h-px" style={{ backgroundColor: envBorder }} />
               <p
                 className="text-xs tracking-widest text-center px-4"
-                style={{ color: envPrimary, opacity: 0.5 }}
+                style={{ color: cardText, opacity: 0.5 }}
               >
                 {event.name}
               </p>
             </motion.div>
 
-            {/* ── Flap (top triangle, rotates open) ── */}
+            {/* ── Flap (rotates open) ── */}
             <motion.div
               className="absolute top-0 left-0 right-0 origin-top"
               style={{ height: 105, transformStyle: "preserve-3d", zIndex: 10 }}
               animate={isOpen ? { rotateX: -180 } : { rotateX: 0 }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
             >
-              {/* Front of flap */}
+              {/* Front */}
               <div
                 className="absolute inset-0"
                 style={{
                   clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                   backgroundColor: envBody,
-                  border: `0px`,
                   outline: `1.5px solid ${envBorder}`,
                   outlineOffset: -1,
                   backfaceVisibility: "hidden",
                 }}
               />
-              {/* Back of flap (shown when open) */}
+              {/* Back (visible when open) */}
               <div
                 className="absolute inset-0"
                 style={{
                   clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-                  backgroundColor: `${envPrimary}18`,
+                  backgroundColor: isBotanical ? `${envBorder}28` : `${theme.primary}18`,
                   transform: "rotateX(180deg)",
                   backfaceVisibility: "hidden",
                 }}
@@ -167,21 +198,40 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
                   transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                  className="absolute left-1/2 -translate-x-1/2 z-20 flex items-center justify-center rounded-full shadow-md"
+                  className="absolute left-1/2 -translate-x-1/2 z-20 flex items-center justify-center rounded-full shadow-lg"
                   style={{
-                    width: 44,
-                    height: 44,
-                    top: 84,
-                    backgroundColor: envPrimary,
+                    width: 48,
+                    height: 48,
+                    top: 82,
+                    backgroundColor: sealBg,
+                    // Slight inner shadow to mimic wax texture
+                    boxShadow: isBotanical
+                      ? "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 3px rgba(255,255,255,0.2)"
+                      : "0 2px 6px rgba(0,0,0,0.2)",
                   }}
                 >
-                  <span style={{ color: "#fff", fontSize: 20, lineHeight: 1 }}>✦</span>
+                  {isBotanical && sealInitials ? (
+                    // Customizable cursive initials
+                    <span
+                      style={{
+                        color: sealFg,
+                        fontFamily: "Great Vibes, cursive",
+                        fontSize: 18,
+                        lineHeight: 1,
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      {sealInitials}
+                    </span>
+                  ) : (
+                    <span style={{ color: sealFg, fontSize: 20, lineHeight: 1 }}>✦</span>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Bottom hint — pulse */}
+          {/* Bottom hint — pulse animation */}
           <AnimatePresence>
             {phase === "idle" && (
               <motion.div
@@ -190,7 +240,7 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ delay: 0.8, duration: 2, repeat: Infinity, repeatType: "loop" }}
                 className="mt-12 text-xs tracking-widest uppercase"
-                style={{ color: envPrimary }}
+                style={{ color: hintColor }}
               >
                 Haz clic para abrir
               </motion.div>
