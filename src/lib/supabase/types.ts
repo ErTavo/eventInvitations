@@ -11,7 +11,9 @@ export type ModuleType =
   | "itinerary"
   | "gifts"
   | "parents"
-  | "envelope_rain";
+  | "envelope_rain"
+  | "instagram"
+  | "tips";
 
 export type AttendanceStatus = "pending" | "confirmed" | "declined";
 

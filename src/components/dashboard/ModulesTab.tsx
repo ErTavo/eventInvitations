@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Event, Module, ModuleType } from "@/lib/supabase/types";
-import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, Plus, GripVertical } from "lucide-react";
+import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, GripVertical } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import AudioUpload from "@/components/ui/AudioUpload";
 import Image from "next/image";
@@ -25,34 +25,128 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 const MODULE_LABELS: Record<ModuleType, string> = {
-  carousel:   "Carrusel de imágenes",
-  music:      "Música de fondo",
-  map:        "Mapa del lugar",
-  rsvp:       "Confirmación de asistencia",
-  countdown:  "Cuenta regresiva",
-  gallery:    "Galería",
-  dress_code: "Código de vestimenta",
-  itinerary:  "Itinerario",
-  gifts:      "Mesa de regalos",
+  carousel:      "Carrusel de imágenes",
+  music:         "Música de fondo",
+  map:           "Mapa del lugar",
+  rsvp:          "Confirmación de asistencia",
+  countdown:     "Cuenta regresiva",
+  gallery:       "Galería",
+  dress_code:    "Código de vestimenta",
+  itinerary:     "Itinerario",
+  gifts:         "Mesa de regalos",
   parents:       "Padres y padrinos",
   envelope_rain: "Lluvia de sobres",
+  instagram:     "Compartir en Instagram",
+  tips:          "Tips y notas",
 };
 
 const MODULE_ICONS: Record<ModuleType, string> = {
-  carousel:   "🖼️",
-  music:      "🎵",
-  map:        "📍",
-  rsvp:       "✉️",
-  countdown:  "⏰",
-  gallery:    "📸",
-  dress_code: "👗",
-  itinerary:  "📋",
-  gifts:      "🎁",
+  carousel:      "🖼️",
+  music:         "🎵",
+  map:           "📍",
+  rsvp:          "✉️",
+  countdown:     "⏰",
+  gallery:       "📸",
+  dress_code:    "👗",
+  itinerary:     "📋",
+  gifts:         "🎁",
   parents:       "👨‍👩‍👧",
   envelope_rain: "💌",
+  instagram:     "📸",
+  tips:          "💡",
 };
 
 interface Props { event: Event; modules: Module[] }
+
+// ── Phantom card — shown for modules that don't exist in DB yet ──────────────
+// Looks identical to a regular module card but creates the module on first toggle
+function PhantomModuleCard({
+  type,
+  eventId,
+  defaultConfig,
+  defaultOrder,
+  expanded,
+  onExpand,
+  onCreate,
+}: {
+  type: ModuleType;
+  eventId: string;
+  defaultConfig: Record<string, unknown>;
+  defaultOrder: number;
+  expanded: boolean;
+  onExpand: () => void;
+  onCreate: (mod: Module) => void;
+}) {
+  const [creating, setCreating] = useState(false);
+
+  async function activate() {
+    setCreating(true);
+    const res = await fetch("/api/modules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event_id: eventId,
+        type,
+        is_active: true,
+        order: defaultOrder,
+        config: defaultConfig,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      toast.error(err.error ?? "Error al crear módulo");
+      setCreating(false);
+      return;
+    }
+    const mod = await res.json();
+    toast.success(`${MODULE_LABELS[type]} activado`);
+    onCreate(mod as Module);
+    setCreating(false);
+  }
+
+  return (
+    <div className="bg-white border border-stone-200 rounded overflow-hidden opacity-75">
+      <div className="flex items-center justify-between px-4 py-3">
+        {/* Placeholder drag grip (non-functional) */}
+        <span className="text-stone-200 mr-2 shrink-0">
+          <GripVertical size={18} />
+        </span>
+
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <span className="text-lg shrink-0">{MODULE_ICONS[type]}</span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-stone-800 truncate">{MODULE_LABELS[type]}</p>
+            <p className="text-xs text-stone-400">No agregado aún</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={activate}
+            disabled={creating}
+            className="text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-50"
+            title="Activar módulo"
+          >
+            {creating
+              ? <span className="text-xs text-stone-400">…</span>
+              : <ToggleLeft size={24} />}
+          </button>
+          <button onClick={onExpand} className="text-stone-400 hover:text-stone-700">
+            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-stone-100 px-4 py-3">
+          <p className="text-xs text-stone-400 italic">
+            Activa el módulo con el toggle para comenzar a configurarlo.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Sortable module card wrapper ─────────────────────────────────────────────
 function SortableModuleCard({
@@ -145,8 +239,6 @@ export default function ModulesTab({ event, modules: initial }: Props) {
   const router = useRouter();
   const [modules, setModules] = useState(initial);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [addingParents,      setAddingParents]      = useState(false);
-  const [addingEnvelopeRain, setAddingEnvelopeRain] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const hasParents      = modules.some((m) => m.type === "parents");
@@ -209,49 +301,10 @@ export default function ModulesTab({ event, modules: initial }: Props) {
     router.refresh();
   }
 
-  async function addParentsModule() {
-    setAddingParents(true);
-    const res = await fetch("/api/modules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event_id: event.id,
-        type: "parents",
-        order: modules.length + 1,
-        config: {
-          sectionTitle: "Nuestros padres",
-          brideParentsLabel: "Padres de la novia",
-          brideParentNames: [],
-          groomParentsLabel: "Padres del novio",
-          groomParentNames: [],
-          godfathersLabel: "Nuestros padrinos",
-          godfatherNames: [],
-        },
-      }),
-    });
-    if (!res.ok) { toast.error("Error al agregar módulo"); }
-    else { toast.success("Módulo de padres agregado"); router.refresh(); }
-    setAddingParents(false);
-  }
-
-  async function addEnvelopeRainModule() {
-    setAddingEnvelopeRain(true);
-    const res = await fetch("/api/modules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event_id: event.id,
-        type: "envelope_rain",
-        order: modules.length + 1,
-        config: {
-          envelopeRainDescription: "Tu presencia es el mejor regalo. Si deseas hacernos un obsequio, puedes hacerlo a través de las siguientes cuentas:",
-          envelopeRainAccounts: [],
-        },
-      }),
-    });
-    if (!res.ok) { toast.error("Error al agregar módulo"); }
-    else { toast.success("Módulo agregado"); router.refresh(); }
-    setAddingEnvelopeRain(false);
+  function handleModuleCreated(mod: Module) {
+    setModules((prev) => [...prev, mod]);
+    setExpanded(mod.id);
+    router.refresh();
   }
 
   return (
@@ -276,21 +329,61 @@ export default function ModulesTab({ event, modules: initial }: Props) {
         </SortableContext>
       </DndContext>
 
-      {/* Add parents module button */}
-      {/* "+" buttons only for events created before these modules were auto-generated */}
+      {/* Phantom cards for modules that don't exist yet in this event's DB */}
       {!hasParents && (
-        <button onClick={addParentsModule} disabled={addingParents}
-          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50">
-          <Plus size={16} />
-          {addingParents ? "Agregando..." : "Agregar módulo de Padres y Padrinos"}
-        </button>
+        <PhantomModuleCard
+          type="parents"
+          eventId={event.id}
+          defaultOrder={modules.length + 1}
+          defaultConfig={{
+            sectionTitle: "Nuestros padres",
+            brideParentsLabel: "Padres de la novia",
+            brideParentNames: [],
+            groomParentsLabel: "Padres del novio",
+            groomParentNames: [],
+            godfathersLabel: "Nuestros padrinos",
+            godfatherNames: [],
+          }}
+          expanded={expanded === "__phantom_parents"}
+          onExpand={() => setExpanded(expanded === "__phantom_parents" ? null : "__phantom_parents")}
+          onCreate={handleModuleCreated}
+        />
       )}
       {!hasEnvelopeRain && (
-        <button onClick={addEnvelopeRainModule} disabled={addingEnvelopeRain}
-          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50">
-          <Plus size={16} />
-          {addingEnvelopeRain ? "Agregando..." : "Agregar módulo de Lluvia de Sobres"}
-        </button>
+        <PhantomModuleCard
+          type="envelope_rain"
+          eventId={event.id}
+          defaultOrder={modules.length + (hasParents ? 1 : 2)}
+          defaultConfig={{
+            envelopeRainDescription: "Tu presencia es el mejor regalo. Si deseas hacernos un obsequio, puedes hacerlo a través de:",
+            envelopeRainAccounts: [],
+          }}
+          expanded={expanded === "__phantom_envelope"}
+          onExpand={() => setExpanded(expanded === "__phantom_envelope" ? null : "__phantom_envelope")}
+          onCreate={handleModuleCreated}
+        />
+      )}
+      {!modules.some((m) => m.type === "instagram") && (
+        <PhantomModuleCard
+          type="instagram"
+          eventId={event.id}
+          defaultOrder={modules.length + 3}
+          defaultConfig={{ hashtag: "", instagramUrl: "", message: "Comparte tus fotos con nosotros" }}
+          expanded={expanded === "__phantom_instagram"}
+          onExpand={() => setExpanded(expanded === "__phantom_instagram" ? null : "__phantom_instagram")}
+          onCreate={handleModuleCreated}
+        />
+      )}
+      {!modules.some((m) => m.type === "tips") && (
+        <PhantomModuleCard
+          type="tips"
+          eventId={event.id}
+          defaultOrder={modules.length + 4}
+          defaultConfig={{ sectionTitle: "Tips para el día", tips: [] }}
+          expanded={expanded === "__phantom_tips"}
+          onExpand={() => setExpanded(expanded === "__phantom_tips" ? null : "__phantom_tips")}
+          onCreate={handleModuleCreated}
+        />
       )}
     </div>
   );
@@ -831,6 +924,61 @@ function ModuleConfigEditor({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Instagram ─────────────────────────────────────────────────────────────
+  if (mod.type === "instagram") {
+    fields.push(
+      <div key="instagram" className="space-y-3">
+        {field("hashtag", "Hashtag (sin #)", "text", "bodaanaycarlos")}
+        {field("instagramUrl", "URL de Instagram (opcional)", "text", "https://www.instagram.com/...")}
+        {field("message", "Mensaje", "text", "Comparte tus fotos con nosotros")}
+      </div>
+    );
+  }
+
+  // ── Tips ──────────────────────────────────────────────────────────────────
+  if (mod.type === "tips") {
+    const tips: string[] = (cfg.tips as string[]) ?? [];
+    fields.push(
+      <div key="tips" className="space-y-3">
+        {field("sectionTitle", "Título", "text", "Tips para el día")}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-medium text-stone-600">Tips ({tips.length})</label>
+            <button type="button"
+              onClick={() => setCfg((p) => ({ ...p, tips: [...((p.tips as string[]) ?? []), ""] }))}
+              className="text-xs bg-stone-800 text-white px-2.5 py-1 hover:bg-stone-700">
+              + Agregar tip
+            </button>
+          </div>
+          {tips.length === 0 && (
+            <p className="text-xs text-stone-400 italic text-center py-3 border border-dashed border-stone-200 rounded">
+              Agrega consejos para tus invitados (estacionamiento, vestimenta, etc.)
+            </p>
+          )}
+          <div className="space-y-2">
+            {tips.map((tip, i) => (
+              <div key={i} className="flex gap-2">
+                <input type="text" value={tip} placeholder="Ej: Hay estacionamiento gratuito"
+                  onChange={(e) => setCfg((p) => {
+                    const next = [...((p.tips as string[]) ?? [])];
+                    next[i] = e.target.value;
+                    return { ...p, tips: next };
+                  })}
+                  className="flex-1 border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+                <button type="button"
+                  onClick={() => setCfg((p) => ({ ...p, tips: ((p.tips as string[]) ?? []).filter((_, idx) => idx !== i) }))}
+                  className="text-stone-300 hover:text-rose-500">
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
