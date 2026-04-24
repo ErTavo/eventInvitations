@@ -18,6 +18,7 @@ import RsvpModule from "./modules/RsvpModule";
 import ParentsModule from "./modules/ParentsModule";
 import EnvelopeRainModule from "./modules/EnvelopeRainModule";
 import LeavesInvitationPage from "./LeavesInvitationPage";
+import EventInfoBar from "./EventInfoBar";
 
 interface Props {
   event: Event;
@@ -189,6 +190,9 @@ export default function InvitationPage({ event, participant, modules, isPreview 
         )}
 
         <HeroSection event={event} participant={participant} theme={theme} parentsConfig={parentsConfig} />
+
+        {/* Companions + calendar — shown below the hero */}
+        <EventInfoBar event={event} participant={participant} theme={theme} />
 
         {/* When there's a cover photo the hero shows only the photo.
             The invitation card with decorations appears here as a separate section. */}

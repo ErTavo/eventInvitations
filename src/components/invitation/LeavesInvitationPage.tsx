@@ -7,6 +7,7 @@ import type { ThemeConfig } from "./themes";
 import { formatDate } from "@/lib/utils";
 import MusicModule from "./modules/MusicModule";
 import EnvelopeIntro from "./EnvelopeIntro";
+import EventInfoBar from "./EventInfoBar";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -388,7 +389,7 @@ function LeavesHero({ event, participant, parentsConfig }: { event: Event; parti
 
         <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
           className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: event.cover_image ? "#f5ead0" : THEME.accent }}>
-          Estimado/a
+          {event.style.greetingText?.trim() || "Estimado/a"}
         </motion.p>
 
         <motion.h2 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
@@ -441,8 +442,6 @@ function LeavesHero({ event, participant, parentsConfig }: { event: Event; parti
             Mesa para {1 + participant.companions} personas
           </motion.div>
         )}
-
-        <AddToCalendar event={event} />
 
         {/* Parents inline in hero */}
         {parentsConfig && (() => {
@@ -578,6 +577,9 @@ export default function LeavesInvitationPage({
 
         <LeavesHero event={event} participant={participant} parentsConfig={parentsConfig} />
 
+        {/* Companions + calendar */}
+        <EventInfoBar event={event} participant={participant} theme={THEME} />
+
         {active.map((mod) => (
           <div key={mod.id}>
             <LeafDivider />
@@ -600,6 +602,83 @@ export default function LeavesInvitationPage({
       <EnvelopeModal  open={modal === "envelope_rain"} onClose={() => setModal(null)} modules={modules} />
       <TipsModal      open={modal === "tips"}          onClose={() => setModal(null)} modules={modules} />
     </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Instagram section with optional parallax background
+// ─────────────────────────────────────────────────────────────────────────────
+
+function InstagramSection({ mod }: { mod: Module }) {
+  const cfg = mod.config as {
+    hashtag?: string; instagramUrl?: string;
+    message?: string; backgroundImage?: string;
+  };
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "end start"],
+  });
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const hasBg = !!cfg.backgroundImage;
+
+  return (
+    <section ref={sectionRef} className="relative overflow-hidden py-20">
+      {/* Parallax background */}
+      {hasBg && (
+        <>
+          <motion.div
+            className="absolute inset-0 bg-cover bg-center scale-110"
+            style={{ backgroundImage: `url(${cfg.backgroundImage})`, y: bgY }}
+          />
+          <div className="absolute inset-0 bg-black/45" />
+        </>
+      )}
+
+      {!hasBg && <div className="absolute inset-0" style={{ backgroundColor: THEME.secondary }} />}
+
+      <div className="relative z-10 max-w-lg mx-auto px-6 text-center space-y-6">
+        {/* Circle icon */}
+        <CircleIcon>{Icons.instagram}</CircleIcon>
+
+        <motion.p
+          initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ delay: 0.25 }}
+          className="text-sm tracking-widest uppercase"
+          style={{ color: hasBg ? "rgba(255,255,255,0.85)" : THEME.primary, fontFamily: "Cormorant Garamond, serif" }}
+        >
+          Comparte el Momento
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }} transition={{ delay: 0.35 }}
+          className="space-y-4"
+        >
+          {cfg.message && (
+            <p className="text-base font-light leading-relaxed"
+               style={{ color: hasBg ? "rgba(255,255,255,0.9)" : THEME.primary }}>
+              {cfg.message}
+            </p>
+          )}
+          {cfg.hashtag && (
+            <p className="text-4xl"
+               style={{ fontFamily: "Great Vibes, cursive", color: hasBg ? "#fff" : THEME.primary }}>
+              #{cfg.hashtag}
+            </p>
+          )}
+          {cfg.instagramUrl && (
+            <a href={cfg.instagramUrl} target="_blank" rel="noopener noreferrer"
+               className="inline-flex items-center gap-2 px-7 py-3 text-sm tracking-widest uppercase"
+               style={hasBg
+                 ? { backgroundColor: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.4)" }
+                 : { backgroundColor: THEME.primary, color: "#fff" }}>
+              <span>📸</span> Ver en Instagram
+            </a>
+          )}
+        </motion.div>
+      </div>
+    </section>
   );
 }
 
@@ -721,26 +800,8 @@ function renderModule(
         </LeavesSection>
       );
 
-    case "instagram": {
-      const cfg = mod.config as { hashtag?: string; instagramUrl?: string; message?: string };
-      return (
-        <LeavesSection icon={Icons.instagram} title="Comparte el Momento">
-          {cfg.message && <p className="text-base font-light mb-4" style={{ color: THEME.primary }}>{cfg.message}</p>}
-          {cfg.hashtag && (
-            <p className="text-3xl mb-4" style={{ fontFamily: "Great Vibes, cursive", color: THEME.primary }}>
-              #{cfg.hashtag}
-            </p>
-          )}
-          {cfg.instagramUrl && (
-            <a href={cfg.instagramUrl} target="_blank" rel="noopener noreferrer"
-               className="inline-flex items-center gap-2 px-6 py-2.5 text-sm tracking-widest uppercase text-white"
-               style={{ backgroundColor: THEME.primary }}>
-              <span>📸</span> Ver en Instagram
-            </a>
-          )}
-        </LeavesSection>
-      );
-    }
+    case "instagram":
+      return <InstagramSection mod={mod} />;
 
     default: return null;
   }

@@ -95,6 +95,7 @@ export default function EventSettingsTab({ event }: Props) {
   const [eventType,      setEventType]      = useState<EventType>(event.style.eventType ?? "general");
   const [person1Name,    setPerson1Name]    = useState(event.style.person1Name   ?? "");
   const [person2Name,    setPerson2Name]    = useState(event.style.person2Name   ?? "");
+  const [greetingText,   setGreetingText]   = useState(event.style.greetingText  ?? "");
 
   const isCustom    = selectedTheme === "custom";
   const isElegant   = selectedTheme === "elegant";
@@ -139,8 +140,9 @@ export default function EventSettingsTab({ event }: Props) {
       textColor,
       fontFamily,
       eventType,
-      ...(person1Name.trim() ? { person1Name: person1Name.trim() } : {}),
-      ...(person2Name.trim() ? { person2Name: person2Name.trim() } : {}),
+      ...(person1Name.trim()  ? { person1Name:  person1Name.trim()  } : {}),
+      ...(person2Name.trim()  ? { person2Name:  person2Name.trim()  } : {}),
+      ...(greetingText.trim() ? { greetingText: greetingText.trim() } : {}),
       ...(isElegant && sealInitials.trim()
         ? { sealInitials: sealInitials.trim().slice(0, 2) }
         : {}),
@@ -212,6 +214,16 @@ export default function EventSettingsTab({ event }: Props) {
       )}
 
       {/* ── Basic info ── */}
+      <div>
+        <label className="block text-sm font-medium text-stone-700 mb-1">Saludo de la invitación</label>
+        <input
+          value={greetingText}
+          onChange={(e) => setGreetingText(e.target.value)}
+          className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500"
+          placeholder='Estimado/a  (por defecto)'
+        />
+        <p className="text-xs text-stone-400 mt-1">Aparece antes del nombre del invitado. Ej: "Con mucha alegría te invitamos", "Es un honor contar con tu presencia"</p>
+      </div>
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-1">Nombre del evento</label>
         <input {...register("name")} className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />

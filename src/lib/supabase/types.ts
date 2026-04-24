@@ -31,8 +31,9 @@ export interface EventStyle {
   backgroundImage?: string;
   sealInitials?: string;
   eventType?: EventType;
-  person1Name?: string; // bride / quinceañera / birthday person
-  person2Name?: string; // groom (weddings only)
+  person1Name?: string;
+  person2Name?: string;
+  greetingText?: string; // shown before the participant name, e.g. "Con mucha alegría te invitamos"
 }
 
 export interface ModuleConfig {

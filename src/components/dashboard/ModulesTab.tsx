@@ -936,6 +936,29 @@ function ModuleConfigEditor({
         {field("hashtag", "Hashtag (sin #)", "text", "bodaanaycarlos")}
         {field("instagramUrl", "URL de Instagram (opcional)", "text", "https://www.instagram.com/...")}
         {field("message", "Mensaje", "text", "Comparte tus fotos con nosotros")}
+        <div>
+          <label className="block text-xs font-medium text-stone-600 mb-2">
+            Imagen de fondo (con efecto parallax)
+          </label>
+          {cfg.backgroundImage ? (
+            <div className="flex items-center gap-3">
+              <div className="relative w-20 h-14 rounded overflow-hidden border border-stone-200 shrink-0">
+                <Image src={cfg.backgroundImage as string} alt="bg" fill className="object-cover" sizes="80px" />
+              </div>
+              <button type="button" onClick={() => setCfg((p) => ({ ...p, backgroundImage: "" }))}
+                className="text-xs text-rose-500 hover:underline">
+                Quitar imagen
+              </button>
+            </div>
+          ) : (
+            <ImageUpload
+              onChange={(url) => setCfg((p) => ({ ...p, backgroundImage: url }))}
+              folder="instagram"
+              label="Subir imagen de fondo"
+              aspectRatio="cover"
+            />
+          )}
+        </div>
       </div>
     );
   }

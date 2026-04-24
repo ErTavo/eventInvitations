@@ -148,7 +148,7 @@ function InvitationContent({
 
       <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: headingColor }}>
-        Estimado/a
+        {event.style.greetingText?.trim() || "Estimado/a"}
       </motion.p>
 
       <motion.h2 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
@@ -202,15 +202,7 @@ function InvitationContent({
         </motion.p>
       )}
 
-      {participant.companions > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.6 }}
-          className="inline-block px-4 py-1.5 rounded-full text-xs tracking-widest uppercase border"
-          style={{ borderColor: dividerColor, color: headingColor }}>
-          Mesa para {1 + participant.companions} personas
-        </motion.div>
-      )}
-
-      <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 1.8 }}
+      <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 1.6 }}
         className="w-16 h-px mx-auto" style={{ backgroundColor: dividerColor }}/>
 
       {/* Parents & godparents — inline in hero */}

@@ -369,10 +369,11 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
             {/* Flap */}
             <motion.div
               className="absolute top-0 left-0 right-0 origin-top"
-              style={{ height: 105, transformStyle: "preserve-3d", zIndex: 10 }}
-              animate={isOpen ? { rotateX: -180 } : { rotateX: 0 }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
+              style={{ height: 105, transformStyle: "preserve-3d", zIndex: 10, perspective: 600 }}
+              animate={isOpen ? { rotateX: 180 } : { rotateX: 0 }}
+              transition={{ duration: 0.65, ease: [0.4, 0, 0.2, 1] }}
             >
+              {/* Front face — downward triangle (closed) */}
               <div className="absolute inset-0"
                    style={{
                      clipPath: "polygon(0 0, 100% 0, 50% 100%)",
@@ -381,10 +382,11 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
                      outlineOffset: -1,
                      backfaceVisibility: "hidden",
                    }} />
+              {/* Back face — upward triangle (open), inverted on X axis */}
               <div className="absolute inset-0"
                    style={{
-                     clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-                     backgroundColor: `${envBorder}28`,
+                     clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+                     backgroundColor: isBotanical ? `${envBorder}30` : `${theme.primary}14`,
                      transform: "rotateX(180deg)",
                      backfaceVisibility: "hidden",
                    }} />
