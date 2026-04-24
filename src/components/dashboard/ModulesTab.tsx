@@ -4,33 +4,35 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import type { Event, Module, ModuleType } from "@/lib/supabase/types";
-import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ToggleLeft, ToggleRight, ChevronDown, ChevronUp, X, Plus } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import AudioUpload from "@/components/ui/AudioUpload";
 import Image from "next/image";
 
 const MODULE_LABELS: Record<ModuleType, string> = {
-  carousel: "Carrusel de imágenes",
-  music: "Música de fondo",
-  map: "Mapa del lugar",
-  rsvp: "Confirmación de asistencia",
-  countdown: "Cuenta regresiva",
-  gallery: "Galería",
+  carousel:   "Carrusel de imágenes",
+  music:      "Música de fondo",
+  map:        "Mapa del lugar",
+  rsvp:       "Confirmación de asistencia",
+  countdown:  "Cuenta regresiva",
+  gallery:    "Galería",
   dress_code: "Código de vestimenta",
-  itinerary: "Itinerario",
-  gifts: "Mesa de regalos",
+  itinerary:  "Itinerario",
+  gifts:      "Mesa de regalos",
+  parents:    "Padres y padrinos",
 };
 
 const MODULE_ICONS: Record<ModuleType, string> = {
-  carousel: "🖼️",
-  music: "🎵",
-  map: "📍",
-  rsvp: "✉️",
-  countdown: "⏰",
-  gallery: "📸",
+  carousel:   "🖼️",
+  music:      "🎵",
+  map:        "📍",
+  rsvp:       "✉️",
+  countdown:  "⏰",
+  gallery:    "📸",
   dress_code: "👗",
-  itinerary: "📋",
-  gifts: "🎁",
+  itinerary:  "📋",
+  gifts:      "🎁",
+  parents:    "👨‍👩‍👧",
 };
 
 interface Props { event: Event; modules: Module[] }
@@ -39,23 +41,20 @@ export default function ModulesTab({ event, modules: initial }: Props) {
   const router = useRouter();
   const [modules, setModules] = useState(initial);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [addingParents, setAddingParents] = useState(false);
+
+  const hasParents = modules.some((m) => m.type === "parents");
 
   async function toggle(mod: Module) {
     const newActive = !mod.is_active;
-    setModules((prev) =>
-      prev.map((m) => (m.id === mod.id ? { ...m, is_active: newActive } : m))
-    );
+    setModules((prev) => prev.map((m) => (m.id === mod.id ? { ...m, is_active: newActive } : m)));
     const res = await fetch(`/api/modules/${mod.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_active: newActive }),
     });
-    if (!res.ok) {
-      toast.error("Error al actualizar");
-      setModules(initial);
-    } else {
-      router.refresh();
-    }
+    if (!res.ok) { toast.error("Error al actualizar"); setModules(initial); }
+    else { router.refresh(); }
   }
 
   async function saveConfig(mod: Module, config: Record<string, unknown>) {
@@ -66,10 +65,33 @@ export default function ModulesTab({ event, modules: initial }: Props) {
     });
     if (!res.ok) { toast.error("Error al guardar"); return; }
     toast.success("Guardado");
-    setModules((prev) =>
-      prev.map((m) => (m.id === mod.id ? { ...m, config } : m))
-    );
+    setModules((prev) => prev.map((m) => (m.id === mod.id ? { ...m, config } : m)));
     router.refresh();
+  }
+
+  async function addParentsModule() {
+    setAddingParents(true);
+    const res = await fetch("/api/modules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event_id: event.id,
+        type: "parents",
+        order: modules.length + 1,
+        config: {
+          sectionTitle: "Nuestros padres",
+          brideParentsLabel: "Padres de la novia",
+          brideParentNames: [],
+          groomParentsLabel: "Padres del novio",
+          groomParentNames: [],
+          godfathersLabel: "Nuestros padrinos",
+          godfatherNames: [],
+        },
+      }),
+    });
+    if (!res.ok) { toast.error("Error al agregar módulo"); }
+    else { toast.success("Módulo de padres agregado"); router.refresh(); }
+    setAddingParents(false);
   }
 
   return (
@@ -78,9 +100,11 @@ export default function ModulesTab({ event, modules: initial }: Props) {
         <div key={mod.id} className="bg-white border border-stone-200 rounded overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
-              <span className="text-lg">{MODULE_ICONS[mod.type]}</span>
+              <span className="text-lg">{MODULE_ICONS[mod.type as ModuleType] ?? "📦"}</span>
               <div>
-                <p className="text-sm font-medium text-stone-800">{MODULE_LABELS[mod.type]}</p>
+                <p className="text-sm font-medium text-stone-800">
+                  {MODULE_LABELS[mod.type as ModuleType] ?? mod.type}
+                </p>
                 <p className="text-xs text-stone-400">{mod.is_active ? "Activo" : "Inactivo"}</p>
               </div>
             </div>
@@ -108,10 +132,23 @@ export default function ModulesTab({ event, modules: initial }: Props) {
           )}
         </div>
       ))}
+
+      {/* Add parents module button */}
+      {!hasParents && (
+        <button
+          onClick={addParentsModule}
+          disabled={addingParents}
+          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50"
+        >
+          <Plus size={16} />
+          {addingParents ? "Agregando..." : "Agregar módulo de Padres y Padrinos"}
+        </button>
+      )}
     </div>
   );
 }
 
+// ── Module config editors ─────────────────────────────────────────────────────
 function ModuleConfigEditor({
   mod,
   onSave,
@@ -121,7 +158,7 @@ function ModuleConfigEditor({
 }) {
   const [cfg, setCfg] = useState<Record<string, unknown>>(mod.config as Record<string, unknown>);
 
-  function field(key: string, label: string, type = "text") {
+  function field(key: string, label: string, type = "text", placeholder = "") {
     return (
       <div key={key}>
         <label className="block text-xs font-medium text-stone-600 mb-1">{label}</label>
@@ -129,6 +166,7 @@ function ModuleConfigEditor({
           type={type}
           value={(cfg[key] as string) ?? ""}
           onChange={(e) => setCfg((p) => ({ ...p, [key]: e.target.value }))}
+          placeholder={placeholder}
           className="w-full border border-stone-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400"
         />
       </div>
@@ -137,6 +175,7 @@ function ModuleConfigEditor({
 
   const fields: React.ReactNode[] = [];
 
+  // ── Music ──────────────────────────────────────────────────────────────────
   if (mod.type === "music") {
     fields.push(
       <div key="music" className="space-y-3">
@@ -145,11 +184,7 @@ function ModuleConfigEditor({
           value={(cfg.musicUrl as string) || ""}
           title={(cfg.musicTitle as string) || ""}
           onChange={(url, filename) =>
-            setCfg((p) => ({
-              ...p,
-              musicUrl: url,
-              musicTitle: p.musicTitle || filename,
-            }))
+            setCfg((p) => ({ ...p, musicUrl: url, musicTitle: p.musicTitle || filename }))
           }
           onRemove={() => setCfg((p) => ({ ...p, musicUrl: "", musicTitle: "" }))}
           folder="audio"
@@ -169,10 +204,14 @@ function ModuleConfigEditor({
       </div>
     );
   }
+
+  // ── Map ────────────────────────────────────────────────────────────────────
   if (mod.type === "map") {
-    fields.push(field("mapAddress", "Dirección"));
+    fields.push(field("mapAddress", "Dirección", "text", "Calle Hidalgo #27, Cholula"));
     fields.push(field("mapEmbedUrl", "URL embed de Google Maps"));
   }
+
+  // ── Itinerary ──────────────────────────────────────────────────────────────
   if (mod.type === "itinerary") {
     const items: { time: string; description: string }[] =
       (cfg.itineraryItems as { time: string; description: string }[]) ?? [];
@@ -187,10 +226,7 @@ function ModuleConfigEditor({
             onClick={() =>
               setCfg((p) => ({
                 ...p,
-                itineraryItems: [
-                  ...((p.itineraryItems as typeof items) ?? []),
-                  { time: "", description: "" },
-                ],
+                itineraryItems: [...((p.itineraryItems as typeof items) ?? []), { time: "", description: "" }],
               }))
             }
             className="text-xs bg-stone-800 text-white px-2.5 py-1 hover:bg-stone-700 transition-colors"
@@ -198,19 +234,16 @@ function ModuleConfigEditor({
             + Agregar
           </button>
         </div>
-
         {items.length === 0 && (
           <p className="text-xs text-stone-400 italic text-center py-3 border border-dashed border-stone-200 rounded">
             Agrega los momentos del evento (ceremonia, recepción, cena…)
           </p>
         )}
-
         <div className="space-y-2">
           {items.map((item, i) => (
             <div key={i} className="flex gap-2 items-start">
               <input
-                type="text"
-                value={item.time}
+                type="text" value={item.time}
                 onChange={(e) =>
                   setCfg((p) => {
                     const next = [...((p.itineraryItems as typeof items) ?? [])];
@@ -218,12 +251,11 @@ function ModuleConfigEditor({
                     return { ...p, itineraryItems: next };
                   })
                 }
-                placeholder="Ej: 4:00 PM"
+                placeholder="4:00 PM"
                 className="w-28 shrink-0 border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
               />
               <input
-                type="text"
-                value={item.description}
+                type="text" value={item.description}
                 onChange={(e) =>
                   setCfg((p) => {
                     const next = [...((p.itineraryItems as typeof items) ?? [])];
@@ -231,7 +263,7 @@ function ModuleConfigEditor({
                     return { ...p, itineraryItems: next };
                   })
                 }
-                placeholder="Ej: Ceremonia civil"
+                placeholder="Ceremonia civil"
                 className="flex-1 border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
               />
               <button
@@ -239,9 +271,7 @@ function ModuleConfigEditor({
                 onClick={() =>
                   setCfg((p) => ({
                     ...p,
-                    itineraryItems: ((p.itineraryItems as typeof items) ?? []).filter(
-                      (_, idx) => idx !== i
-                    ),
+                    itineraryItems: ((p.itineraryItems as typeof items) ?? []).filter((_, idx) => idx !== i),
                   }))
                 }
                 className="text-stone-300 hover:text-rose-500 transition-colors pt-1.5"
@@ -254,13 +284,140 @@ function ModuleConfigEditor({
       </div>
     );
   }
+
+  // ── Dress code ─────────────────────────────────────────────────────────────
   if (mod.type === "dress_code") {
-    fields.push(field("dressCodeText", "Descripción del código de vestimenta"));
+    fields.push(
+      <div key="dress_code" className="space-y-4">
+        {field("dressCodeText", "Descripción general", "text", "Ej: Formal, colores claros")}
+
+        {/* Color swatches */}
+        <div>
+          <label className="block text-xs font-medium text-stone-600 mb-2">
+            Paleta de colores (haz clic en + para agregar)
+          </label>
+          <div className="flex gap-2 flex-wrap items-center">
+            {((cfg.dressCodeColors as string[]) ?? []).map((color, i) => (
+              <div key={i} className="relative group">
+                <input
+                  type="color" value={color}
+                  onChange={(e) =>
+                    setCfg((p) => {
+                      const next = [...((p.dressCodeColors as string[]) ?? [])];
+                      next[i] = e.target.value;
+                      return { ...p, dressCodeColors: next };
+                    })
+                  }
+                  className="w-9 h-9 rounded-full cursor-pointer border-2 border-white shadow-sm p-0"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCfg((p) => ({
+                      ...p,
+                      dressCodeColors: ((p.dressCodeColors as string[]) ?? []).filter((_, idx) => idx !== i),
+                    }))
+                  }
+                  className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() =>
+                setCfg((p) => ({
+                  ...p,
+                  dressCodeColors: [...((p.dressCodeColors as string[]) ?? []), "#c9a96e"],
+                }))
+              }
+              className="w-9 h-9 rounded-full border-2 border-dashed border-stone-300 flex items-center justify-center text-stone-400 hover:border-stone-500 hover:text-stone-600 transition-colors text-lg"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <hr className="border-stone-100" />
+        <p className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Foto de ejemplo</p>
+
+        {/* Female photo */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-stone-600">Foto ejemplo — Mujer</label>
+          {cfg.dressCodeFemaleImage ? (
+            <div className="flex items-start gap-3">
+              <div className="relative w-20 h-28 rounded overflow-hidden border border-stone-200 shrink-0">
+                <Image src={cfg.dressCodeFemaleImage as string} alt="Mujer" fill className="object-cover" sizes="80px" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setCfg((p) => ({ ...p, dressCodeFemaleImage: "" }))}
+                className="text-xs text-rose-500 hover:underline mt-1"
+              >
+                Quitar foto
+              </button>
+            </div>
+          ) : (
+            <ImageUpload
+              onChange={(url) => setCfg((p) => ({ ...p, dressCodeFemaleImage: url }))}
+              folder="dresscode"
+              label="Subir foto mujer"
+              aspectRatio="portrait"
+            />
+          )}
+          <input
+            type="text"
+            value={(cfg.dressCodeFemaleDescription as string) ?? ""}
+            onChange={(e) => setCfg((p) => ({ ...p, dressCodeFemaleDescription: e.target.value }))}
+            placeholder="Ej: Vestido largo, colores pastel"
+            className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+
+        {/* Male photo */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-stone-600">Foto ejemplo — Hombre</label>
+          {cfg.dressCodeMaleImage ? (
+            <div className="flex items-start gap-3">
+              <div className="relative w-20 h-28 rounded overflow-hidden border border-stone-200 shrink-0">
+                <Image src={cfg.dressCodeMaleImage as string} alt="Hombre" fill className="object-cover" sizes="80px" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setCfg((p) => ({ ...p, dressCodeMaleImage: "" }))}
+                className="text-xs text-rose-500 hover:underline mt-1"
+              >
+                Quitar foto
+              </button>
+            </div>
+          ) : (
+            <ImageUpload
+              onChange={(url) => setCfg((p) => ({ ...p, dressCodeMaleImage: url }))}
+              folder="dresscode"
+              label="Subir foto hombre"
+              aspectRatio="portrait"
+            />
+          )}
+          <input
+            type="text"
+            value={(cfg.dressCodeMaleDescription as string) ?? ""}
+            onChange={(e) => setCfg((p) => ({ ...p, dressCodeMaleDescription: e.target.value }))}
+            placeholder="Ej: Traje formal, corbata oscura"
+            className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+          />
+        </div>
+      </div>
+    );
   }
+
+  // ── Gifts ──────────────────────────────────────────────────────────────────
   if (mod.type === "gifts") {
     fields.push(field("giftsText", "Texto (ej: En lugar de regalos...)"));
     fields.push(field("giftStoreUrl", "Link a tienda / lista de regalos"));
   }
+
+  // ── Carousel / Gallery ─────────────────────────────────────────────────────
   if (mod.type === "carousel" || mod.type === "gallery") {
     const images: string[] = (cfg.images as string[]) ?? [];
     fields.push(
@@ -268,7 +425,6 @@ function ModuleConfigEditor({
         <label className="block text-xs font-medium text-stone-600">
           Imágenes ({images.length})
         </label>
-        {/* Existing images */}
         {images.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             {images.map((src, i) => (
@@ -277,10 +433,7 @@ function ModuleConfigEditor({
                 <button
                   type="button"
                   onClick={() =>
-                    setCfg((p) => ({
-                      ...p,
-                      images: (p.images as string[]).filter((_, idx) => idx !== i),
-                    }))
+                    setCfg((p) => ({ ...p, images: (p.images as string[]).filter((_, idx) => idx !== i) }))
                   }
                   className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
@@ -290,18 +443,89 @@ function ModuleConfigEditor({
             ))}
           </div>
         )}
-        {/* Upload new */}
         <ImageUpload
           onChange={(url) =>
-            setCfg((p) => ({
-              ...p,
-              images: [...((p.images as string[]) ?? []), url],
-            }))
+            setCfg((p) => ({ ...p, images: [...((p.images as string[]) ?? []), url] }))
           }
           folder="gallery"
           label="Agregar imagen"
           aspectRatio="square"
         />
+      </div>
+    );
+  }
+
+  // ── Parents ────────────────────────────────────────────────────────────────
+  if (mod.type === "parents") {
+    function namesField(
+      cfgKey: string,
+      label: string,
+      placeholder: string
+    ) {
+      const names: string[] = (cfg[cfgKey] as string[]) ?? [];
+      return (
+        <div key={cfgKey} className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-stone-600">{label}</label>
+            <button
+              type="button"
+              onClick={() =>
+                setCfg((p) => ({ ...p, [cfgKey]: [...((p[cfgKey] as string[]) ?? []), ""] }))
+              }
+              className="text-xs bg-stone-800 text-white px-2 py-0.5 hover:bg-stone-700 transition-colors"
+            >
+              + Nombre
+            </button>
+          </div>
+          {names.map((name, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text" value={name} placeholder={placeholder}
+                onChange={(e) =>
+                  setCfg((p) => {
+                    const next = [...((p[cfgKey] as string[]) ?? [])];
+                    next[i] = e.target.value;
+                    return { ...p, [cfgKey]: next };
+                  })
+                }
+                className="flex-1 border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setCfg((p) => ({
+                    ...p,
+                    [cfgKey]: ((p[cfgKey] as string[]) ?? []).filter((_, idx) => idx !== i),
+                  }))
+                }
+                className="text-stone-300 hover:text-rose-500"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    fields.push(
+      <div key="parents" className="space-y-4">
+        {field("sectionTitle", "Título de la sección", "text", "Nuestros padres")}
+
+        <hr className="border-stone-100" />
+
+        {field("brideParentsLabel", "Etiqueta padres novia", "text", "Padres de la novia")}
+        {namesField("brideParentNames", "Nombres — padres de la novia", "Ej: María García López")}
+
+        <hr className="border-stone-100" />
+
+        {field("groomParentsLabel", "Etiqueta padres novio", "text", "Padres del novio")}
+        {namesField("groomParentNames", "Nombres — padres del novio", "Ej: Juan Pérez Ramírez")}
+
+        <hr className="border-stone-100" />
+
+        {field("godfathersLabel", "Etiqueta padrinos", "text", "Nuestros padrinos")}
+        {namesField("godfatherNames", "Nombres — padrinos", "Ej: Roberto Flores")}
       </div>
     );
   }

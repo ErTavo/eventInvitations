@@ -9,7 +9,8 @@ export type ModuleType =
   | "gallery"
   | "dress_code"
   | "itinerary"
-  | "gifts";
+  | "gifts"
+  | "parents";
 
 export type AttendanceStatus = "pending" | "confirmed" | "declined";
 
@@ -35,12 +36,25 @@ export interface ModuleConfig {
   mapLng?: number;
   mapLat?: number;
   mapEmbedUrl?: string;
+  // Dress code
   dressCodeText?: string;
   dressCodeColors?: string[];
+  dressCodeFemaleImage?: string;
+  dressCodeFemaleDescription?: string;
+  dressCodeMaleImage?: string;
+  dressCodeMaleDescription?: string;
   itineraryItems?: { time: string; description: string }[];
   giftsText?: string;
   giftStoreUrl?: string;
   rsvpDeadline?: string;
+  // Parents module
+  sectionTitle?: string;
+  brideParentsLabel?: string;
+  brideParentNames?: string[];
+  groomParentsLabel?: string;
+  groomParentNames?: string[];
+  godfathersLabel?: string;
+  godfatherNames?: string[];
 }
 
 // App-level row types (typed JSONB, use these in components)
