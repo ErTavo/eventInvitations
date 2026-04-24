@@ -24,8 +24,38 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Create default modules
+  // Create default modules (countdown, carousel, music, map, dress_code, itinerary, gifts, rsvp)
   await supabase.rpc("create_default_modules", { p_event_id: event.id });
+
+  // Create optional modules inactive by default — user enables them from the dashboard
+  await supabase.from("modules").insert([
+    {
+      event_id: event.id,
+      type: "parents",
+      is_active: false,
+      order: 50,
+      config: {
+        sectionTitle: "Nuestros padres",
+        brideParentsLabel: "Padres de la novia",
+        brideParentNames: [],
+        groomParentsLabel: "Padres del novio",
+        groomParentNames: [],
+        godfathersLabel: "Nuestros padrinos",
+        godfatherNames: [],
+      },
+    },
+    {
+      event_id: event.id,
+      type: "envelope_rain",
+      is_active: false,
+      order: 51,
+      config: {
+        envelopeRainDescription:
+          "Tu presencia es el mejor regalo. Si deseas hacernos un obsequio, puedes hacerlo a través de las siguientes cuentas:",
+        envelopeRainAccounts: [],
+      },
+    },
+  ]);
 
   return NextResponse.json(event, { status: 201 });
 }

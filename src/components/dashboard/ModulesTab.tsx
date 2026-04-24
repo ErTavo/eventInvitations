@@ -158,23 +158,17 @@ export default function ModulesTab({ event, modules: initial }: Props) {
       ))}
 
       {/* Add parents module button */}
+      {/* "+" buttons only for events created before these modules were auto-generated */}
       {!hasParents && (
-        <button
-          onClick={addParentsModule}
-          disabled={addingParents}
-          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50"
-        >
+        <button onClick={addParentsModule} disabled={addingParents}
+          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50">
           <Plus size={16} />
           {addingParents ? "Agregando..." : "Agregar módulo de Padres y Padrinos"}
         </button>
       )}
-
       {!hasEnvelopeRain && (
-        <button
-          onClick={addEnvelopeRainModule}
-          disabled={addingEnvelopeRain}
-          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50"
-        >
+        <button onClick={addEnvelopeRainModule} disabled={addingEnvelopeRain}
+          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50">
           <Plus size={16} />
           {addingEnvelopeRain ? "Agregando..." : "Agregar módulo de Lluvia de Sobres"}
         </button>

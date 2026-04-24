@@ -6,7 +6,7 @@ import type { Event, Module, Participant } from "@/lib/supabase/types";
 import { buildThemeConfig } from "./themes";
 import type { ThemeConfig } from "./themes";
 import EnvelopeIntro from "./EnvelopeIntro";
-import HeroSection from "./HeroSection";
+import HeroSection, { BotanicalInvitationCard } from "./HeroSection";
 import CountdownModule from "./modules/CountdownModule";
 import CarouselModule from "./modules/CarouselModule";
 import MusicModule from "./modules/MusicModule";
@@ -92,9 +92,11 @@ export default function InvitationPage({ event, participant, modules, isPreview 
     }
   }, [isPreview, participant.id, participant.invitation_viewed]);
 
-  const getModule = (type: string) => modules.find((m) => m.type === type);
+  // Only return a module if it exists AND is active
+  const getModule = (type: string) => modules.find((m) => m.type === type && m.is_active);
   const musicModule = getModule("music");
   const musicCfg = musicModule?.config as { musicUrl?: string } | undefined;
+  const hasCover    = !!event.cover_image;
 
   function handleEnvelopeOpen() {
     setOpened(true);
@@ -157,6 +159,37 @@ export default function InvitationPage({ event, participant, modules, isPreview 
         )}
 
         <HeroSection event={event} participant={participant} theme={theme} />
+
+        {/* When there's a cover photo the hero shows only the photo.
+            The invitation card with decorations appears here as a separate section. */}
+        {hasCover && isBotanical && (
+          <BotanicalInvitationCard event={event} participant={participant} theme={theme} />
+        )}
+        {hasCover && !isBotanical && (
+          <section className={`py-16 ${theme.sectionClass}`}>
+            <div className="max-w-lg mx-auto px-6 text-center space-y-5">
+              <div className="w-16 h-px mx-auto" style={{ backgroundColor: theme.accent }} />
+              <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: theme.primary }}>
+                Estimado/a
+              </p>
+              <p className="text-3xl md:text-4xl font-light" style={{ color: theme.primary }}>
+                {participant.name}
+              </p>
+              <div className="w-12 h-px mx-auto" style={{ backgroundColor: theme.accent }} />
+              {event.location && (
+                <p className="text-sm tracking-wider" style={{ color: theme.primary, opacity: 0.7 }}>
+                  {event.location}
+                </p>
+              )}
+              {participant.companions > 0 && (
+                <div className="inline-block px-4 py-1.5 rounded-full text-xs tracking-widest uppercase border"
+                     style={{ borderColor: theme.accent, color: theme.primary }}>
+                  Mesa para {1 + participant.companions} personas
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Modules — with botanical dividers between them for the elegant template */}
         {activeModules.map((mod, i) => (
