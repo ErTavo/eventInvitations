@@ -398,7 +398,7 @@ function ModuleConfigEditor({
               onChange={(url) => setCfg((p) => ({ ...p, dressCodeFemaleImage: url }))}
               folder="dresscode"
               label="Subir foto mujer"
-              aspectRatio="portrait"
+              aspectRatio="free"
             />
           )}
           <input
@@ -431,7 +431,7 @@ function ModuleConfigEditor({
               onChange={(url) => setCfg((p) => ({ ...p, dressCodeMaleImage: url }))}
               folder="dresscode"
               label="Subir foto hombre"
-              aspectRatio="portrait"
+              aspectRatio="free"
             />
           )}
           <input
