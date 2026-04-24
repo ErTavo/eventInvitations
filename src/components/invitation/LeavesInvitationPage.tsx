@@ -8,6 +8,7 @@ import { formatDate } from "@/lib/utils";
 import MusicModule from "./modules/MusicModule";
 import EnvelopeIntro from "./EnvelopeIntro";
 import EventInfoBar from "./EventInfoBar";
+import useEmblaCarousel from "embla-carousel-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -371,10 +372,14 @@ function LeavesHero({ event, participant, parentsConfig }: { event: Event; parti
   return (
     <section ref={ref} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden"
              style={{ backgroundColor: THEME.secondary }}>
-      <CornerLeaves position="tl" />
-      <CornerLeaves position="tr" />
-      <CornerLeaves position="bl" />
-      <CornerLeaves position="br" />
+      {!event.cover_image && (
+        <>
+          <CornerLeaves position="tl" />
+          <CornerLeaves position="tr" />
+          <CornerLeaves position="bl" />
+          <CornerLeaves position="br" />
+        </>
+      )}
 
       {event.cover_image && (
         <>
@@ -560,6 +565,17 @@ export default function LeavesInvitationPage({
         <EnvelopeIntro event={event} participant={participant} theme={THEME} onOpen={onEnvelopeOpen} />
       )}
 
+      {/* Audio element lives here so audioRef is always populated for leaves theme */}
+      {musicMod && (
+        <audio
+          ref={audioRef}
+          src={(musicMod.config as { musicUrl?: string }).musicUrl}
+          loop
+          preload="auto"
+          style={{ display: "none" }}
+        />
+      )}
+
       {/* Main invitation */}
       <motion.div
         className="min-h-screen linen-texture" style={{ backgroundColor: THEME.secondary, fontFamily: "Cormorant Garamond, serif" }}
@@ -576,9 +592,6 @@ export default function LeavesInvitationPage({
         {musicMod && <MusicModule module={musicMod} theme={THEME} audioRef={audioRef} />}
 
         <LeavesHero event={event} participant={participant} parentsConfig={parentsConfig} />
-
-        {/* Companions + calendar */}
-        <EventInfoBar event={event} participant={participant} theme={THEME} />
 
         {active.map((mod) => (
           <div key={mod.id}>
@@ -602,6 +615,46 @@ export default function LeavesInvitationPage({
       <EnvelopeModal  open={modal === "envelope_rain"} onClose={() => setModal(null)} modules={modules} />
       <TipsModal      open={modal === "tips"}          onClose={() => setModal(null)} modules={modules} />
     </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gallery carousel
+// ─────────────────────────────────────────────────────────────────────────────
+
+function LeavesCarousel({ mod }: { mod: Module }) {
+  const images = (mod.config as { images?: string[] }).images ?? [];
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, align: "center" });
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const id = setInterval(() => emblaApi.scrollNext(), 3500);
+    return () => clearInterval(id);
+  }, [emblaApi]);
+
+  if (!images.length) return null;
+
+  return (
+    <LeavesSection icon={Icons.gallery} title="Galería">
+      <div className="mt-4 -mx-6 overflow-hidden" ref={emblaRef}>
+        <div className="flex gap-3 px-6">
+          {images.map((src, i) => (
+            <div key={i} className="flex-[0_0_78%] relative aspect-[4/5] rounded-xl overflow-hidden shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="w-full h-full object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Dot indicators */}
+      <div className="flex justify-center gap-1.5 mt-4">
+        {images.map((_, i) => (
+          <button key={i} onClick={() => emblaApi?.scrollTo(i)}
+            className="w-1.5 h-1.5 rounded-full transition-all"
+            style={{ backgroundColor: THEME.primary, opacity: 0.3 }} />
+        ))}
+      </div>
+    </LeavesSection>
   );
 }
 
@@ -716,25 +769,8 @@ function renderModule(
     case "countdown": return <Countdown event={event} />;
 
     case "carousel":
-    case "gallery": {
-      const images = (mod.config as { images?: string[] }).images ?? [];
-      if (!images.length) return null;
-      return (
-        <LeavesSection icon={Icons.gallery} title="Galería">
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {images.slice(0, 6).map((src, i) => (
-              <motion.div key={i} className="aspect-square overflow-hidden rounded"
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="w-full h-full object-cover" />
-              </motion.div>
-            ))}
-          </div>
-        </LeavesSection>
-      );
-    }
+    case "gallery":
+      return <LeavesCarousel mod={mod} />;
 
     case "itinerary": {
       const items = (mod.config as { itineraryItems?: { time: string; description: string }[] }).itineraryItems ?? [];
@@ -799,6 +835,9 @@ function renderModule(
           )}
         </LeavesSection>
       );
+
+    case "event_info":
+      return <EventInfoBar event={event} participant={participant} theme={THEME} />;
 
     case "instagram":
       return <InstagramSection mod={mod} />;

@@ -38,6 +38,7 @@ const MODULE_LABELS: Record<ModuleType, string> = {
   envelope_rain: "Lluvia de sobres",
   instagram:     "Compartir en Instagram",
   tips:          "Tips y notas",
+  event_info:    "Mesa y Agregar al calendario",
 };
 
 const MODULE_ICONS: Record<ModuleType, string> = {
@@ -54,6 +55,7 @@ const MODULE_ICONS: Record<ModuleType, string> = {
   envelope_rain: "💌",
   instagram:     "📸",
   tips:          "💡",
+  event_info:    "🗓️",
 };
 
 interface Props { event: Event; modules: Module[] }
@@ -382,6 +384,17 @@ export default function ModulesTab({ event, modules: initial }: Props) {
           defaultConfig={{ sectionTitle: "Tips para el día", tips: [] }}
           expanded={expanded === "__phantom_tips"}
           onExpand={() => setExpanded(expanded === "__phantom_tips" ? null : "__phantom_tips")}
+          onCreate={handleModuleCreated}
+        />
+      )}
+      {!modules.some((m) => m.type === "event_info") && (
+        <PhantomModuleCard
+          type="event_info"
+          eventId={event.id}
+          defaultOrder={modules.length + 5}
+          defaultConfig={{}}
+          expanded={expanded === "__phantom_event_info"}
+          onExpand={() => setExpanded(expanded === "__phantom_event_info" ? null : "__phantom_event_info")}
           onCreate={handleModuleCreated}
         />
       )}

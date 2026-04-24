@@ -13,7 +13,8 @@ export type ModuleType =
   | "parents"
   | "envelope_rain"
   | "instagram"
-  | "tips";
+  | "tips"
+  | "event_info";
 
 export type AttendanceStatus = "pending" | "confirmed" | "declined";
 

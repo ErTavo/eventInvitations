@@ -53,7 +53,8 @@ BEGIN
     (p_event_id, 'envelope_rain', false, 9,
       '{"envelopeRainDescription":"Tu presencia es el mejor regalo. Si deseas hacernos un obsequio, puedes hacerlo a través de:","envelopeRainAccounts":[]}'
     ),
-    (p_event_id, 'rsvp',          true,  10, '{}')
+    (p_event_id, 'event_info',    true,  10, '{}'),
+    (p_event_id, 'rsvp',          true,  11, '{}')
   ON CONFLICT (event_id, type) DO NOTHING;
 END;
 $$;

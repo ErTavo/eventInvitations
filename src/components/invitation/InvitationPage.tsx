@@ -145,6 +145,7 @@ export default function InvitationPage({ event, participant, modules, isPreview 
         case "gifts":        return { key: m.id, el: <GiftsModule module={m} theme={theme} /> };
         case "parents":      return { key: m.id, el: <ParentsModule module={m} theme={theme} /> };
         case "envelope_rain":return { key: m.id, el: <EnvelopeRainModule module={m} theme={theme} /> };
+        case "event_info":  return { key: m.id, el: <EventInfoBar event={event} participant={participant} theme={theme} /> };
         case "rsvp":
           if (isPreview) return {
             key: m.id,
@@ -190,9 +191,6 @@ export default function InvitationPage({ event, participant, modules, isPreview 
         )}
 
         <HeroSection event={event} participant={participant} theme={theme} parentsConfig={parentsConfig} />
-
-        {/* Companions + calendar — shown below the hero */}
-        <EventInfoBar event={event} participant={participant} theme={theme} />
 
         {/* When there's a cover photo the hero shows only the photo.
             The invitation card with decorations appears here as a separate section. */}
