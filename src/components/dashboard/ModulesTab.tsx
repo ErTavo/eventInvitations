@@ -19,7 +19,8 @@ const MODULE_LABELS: Record<ModuleType, string> = {
   dress_code: "Código de vestimenta",
   itinerary:  "Itinerario",
   gifts:      "Mesa de regalos",
-  parents:    "Padres y padrinos",
+  parents:       "Padres y padrinos",
+  envelope_rain: "Lluvia de sobres",
 };
 
 const MODULE_ICONS: Record<ModuleType, string> = {
@@ -32,7 +33,8 @@ const MODULE_ICONS: Record<ModuleType, string> = {
   dress_code: "👗",
   itinerary:  "📋",
   gifts:      "🎁",
-  parents:    "👨‍👩‍👧",
+  parents:       "👨‍👩‍👧",
+  envelope_rain: "💌",
 };
 
 interface Props { event: Event; modules: Module[] }
@@ -41,9 +43,11 @@ export default function ModulesTab({ event, modules: initial }: Props) {
   const router = useRouter();
   const [modules, setModules] = useState(initial);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [addingParents, setAddingParents] = useState(false);
+  const [addingParents,      setAddingParents]      = useState(false);
+  const [addingEnvelopeRain, setAddingEnvelopeRain] = useState(false);
 
-  const hasParents = modules.some((m) => m.type === "parents");
+  const hasParents      = modules.some((m) => m.type === "parents");
+  const hasEnvelopeRain = modules.some((m) => m.type === "envelope_rain");
 
   async function toggle(mod: Module) {
     const newActive = !mod.is_active;
@@ -94,6 +98,26 @@ export default function ModulesTab({ event, modules: initial }: Props) {
     setAddingParents(false);
   }
 
+  async function addEnvelopeRainModule() {
+    setAddingEnvelopeRain(true);
+    const res = await fetch("/api/modules", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event_id: event.id,
+        type: "envelope_rain",
+        order: modules.length + 1,
+        config: {
+          envelopeRainDescription: "Tu presencia es el mejor regalo. Si deseas hacernos un obsequio, puedes hacerlo a través de las siguientes cuentas:",
+          envelopeRainAccounts: [],
+        },
+      }),
+    });
+    if (!res.ok) { toast.error("Error al agregar módulo"); }
+    else { toast.success("Módulo agregado"); router.refresh(); }
+    setAddingEnvelopeRain(false);
+  }
+
   return (
     <div className="space-y-3">
       {modules.map((mod) => (
@@ -142,6 +166,17 @@ export default function ModulesTab({ event, modules: initial }: Props) {
         >
           <Plus size={16} />
           {addingParents ? "Agregando..." : "Agregar módulo de Padres y Padrinos"}
+        </button>
+      )}
+
+      {!hasEnvelopeRain && (
+        <button
+          onClick={addEnvelopeRainModule}
+          disabled={addingEnvelopeRain}
+          className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-stone-300 rounded py-3 text-sm text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors disabled:opacity-50"
+        >
+          <Plus size={16} />
+          {addingEnvelopeRain ? "Agregando..." : "Agregar módulo de Lluvia de Sobres"}
         </button>
       )}
     </div>
@@ -526,6 +561,164 @@ function ModuleConfigEditor({
 
         {field("godfathersLabel", "Etiqueta padrinos", "text", "Nuestros padrinos")}
         {namesField("godfatherNames", "Nombres — padrinos", "Ej: Roberto Flores")}
+      </div>
+    );
+  }
+
+  // ── Envelope Rain ──────────────────────────────────────────────────────────
+  if (mod.type === "envelope_rain") {
+    type Account = {
+      bankName: string;
+      accountHolder: string;
+      clabe: string;
+      accountNumber?: string;
+      alias?: string;
+    };
+    const accounts: Account[] = (cfg.envelopeRainAccounts as Account[]) ?? [];
+
+    fields.push(
+      <div key="envelope_rain" className="space-y-4">
+        {/* Description */}
+        <div>
+          <label className="block text-xs font-medium text-stone-600 mb-1">Texto introductorio</label>
+          <textarea
+            value={(cfg.envelopeRainDescription as string) ?? ""}
+            onChange={(e) => setCfg((p) => ({ ...p, envelopeRainDescription: e.target.value }))}
+            rows={3}
+            placeholder="Tu presencia es el mejor regalo..."
+            className="w-full border border-stone-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-stone-400 resize-none"
+          />
+        </div>
+
+        <hr className="border-stone-100" />
+
+        {/* Accounts list */}
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-stone-600">
+            Cuentas bancarias ({accounts.length})
+          </label>
+          <button
+            type="button"
+            onClick={() =>
+              setCfg((p) => ({
+                ...p,
+                envelopeRainAccounts: [
+                  ...((p.envelopeRainAccounts as Account[]) ?? []),
+                  { bankName: "", accountHolder: "", clabe: "", accountNumber: "", alias: "" },
+                ],
+              }))
+            }
+            className="text-xs bg-stone-800 text-white px-2.5 py-1 hover:bg-stone-700 transition-colors"
+          >
+            + Agregar cuenta
+          </button>
+        </div>
+
+        {accounts.length === 0 && (
+          <p className="text-xs text-stone-400 italic text-center py-3 border border-dashed border-stone-200 rounded">
+            Agrega las cuentas donde pueden enviarte el regalo
+          </p>
+        )}
+
+        <div className="space-y-4">
+          {accounts.map((acc, i) => (
+            <div key={i} className="border border-stone-200 rounded p-3 space-y-2.5 relative">
+              <button
+                type="button"
+                onClick={() =>
+                  setCfg((p) => ({
+                    ...p,
+                    envelopeRainAccounts: ((p.envelopeRainAccounts as Account[]) ?? []).filter((_, idx) => idx !== i),
+                  }))
+                }
+                className="absolute top-2 right-2 text-stone-300 hover:text-rose-500 transition-colors"
+              >
+                <X size={14} />
+              </button>
+
+              {/* Bank name */}
+              <div>
+                <label className="block text-xs text-stone-500 mb-0.5">Banco</label>
+                <input
+                  type="text" value={acc.bankName} placeholder="BBVA, Banamex, HSBC…"
+                  onChange={(e) =>
+                    setCfg((p) => {
+                      const next = [...((p.envelopeRainAccounts as Account[]) ?? [])];
+                      next[i] = { ...next[i], bankName: e.target.value };
+                      return { ...p, envelopeRainAccounts: next };
+                    })
+                  }
+                  className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+              </div>
+
+              {/* Account holder */}
+              <div>
+                <label className="block text-xs text-stone-500 mb-0.5">Titular</label>
+                <input
+                  type="text" value={acc.accountHolder} placeholder="Nombre completo"
+                  onChange={(e) =>
+                    setCfg((p) => {
+                      const next = [...((p.envelopeRainAccounts as Account[]) ?? [])];
+                      next[i] = { ...next[i], accountHolder: e.target.value };
+                      return { ...p, envelopeRainAccounts: next };
+                    })
+                  }
+                  className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+              </div>
+
+              {/* CLABE */}
+              <div>
+                <label className="block text-xs text-stone-500 mb-0.5">CLABE interbancaria</label>
+                <input
+                  type="text" value={acc.clabe} placeholder="18 dígitos"
+                  maxLength={18}
+                  onChange={(e) =>
+                    setCfg((p) => {
+                      const next = [...((p.envelopeRainAccounts as Account[]) ?? [])];
+                      next[i] = { ...next[i], clabe: e.target.value.replace(/\D/g, "") };
+                      return { ...p, envelopeRainAccounts: next };
+                    })
+                  }
+                  className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+              </div>
+
+              {/* Account number (optional) */}
+              <div>
+                <label className="block text-xs text-stone-500 mb-0.5">Número de cuenta <span className="text-stone-400">(opcional)</span></label>
+                <input
+                  type="text" value={acc.accountNumber ?? ""} placeholder="10 dígitos"
+                  onChange={(e) =>
+                    setCfg((p) => {
+                      const next = [...((p.envelopeRainAccounts as Account[]) ?? [])];
+                      next[i] = { ...next[i], accountNumber: e.target.value.replace(/\D/g, "") };
+                      return { ...p, envelopeRainAccounts: next };
+                    })
+                  }
+                  className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+              </div>
+
+              {/* Alias SPEI (optional) */}
+              <div>
+                <label className="block text-xs text-stone-500 mb-0.5">Alias SPEI <span className="text-stone-400">(opcional)</span></label>
+                <input
+                  type="text" value={acc.alias ?? ""} placeholder="Ej: bodaana2025"
+                  onChange={(e) =>
+                    setCfg((p) => {
+                      const next = [...((p.envelopeRainAccounts as Account[]) ?? [])];
+                      next[i] = { ...next[i], alias: e.target.value };
+                      return { ...p, envelopeRainAccounts: next };
+                    })
+                  }
+                  className="w-full border border-stone-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-stone-400"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

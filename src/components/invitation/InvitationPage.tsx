@@ -16,6 +16,7 @@ import ItineraryModule from "./modules/ItineraryModule";
 import GiftsModule from "./modules/GiftsModule";
 import RsvpModule from "./modules/RsvpModule";
 import ParentsModule from "./modules/ParentsModule";
+import EnvelopeRainModule from "./modules/EnvelopeRainModule";
 
 interface Props {
   event: Event;
@@ -110,7 +111,8 @@ export default function InvitationPage({ event, participant, modules, isPreview 
     getModule("dress_code") && { key: "dress_code", el: <DressCodeModule module={getModule("dress_code")!} theme={theme} /> },
     getModule("map")        && { key: "map",        el: <MapModule module={getModule("map")!} event={event} theme={theme} /> },
     getModule("gifts")      && { key: "gifts",      el: <GiftsModule module={getModule("gifts")!} theme={theme} /> },
-    getModule("parents")    && { key: "parents",    el: <ParentsModule module={getModule("parents")!} theme={theme} /> },
+    getModule("parents")       && { key: "parents",       el: <ParentsModule module={getModule("parents")!} theme={theme} /> },
+    getModule("envelope_rain") && { key: "envelope_rain", el: <EnvelopeRainModule module={getModule("envelope_rain")!} theme={theme} /> },
     (getModule("rsvp") && !isPreview) && {
       key: "rsvp",
       el: <RsvpModule participant={participant} theme={theme} />,

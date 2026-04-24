@@ -10,7 +10,8 @@ export type ModuleType =
   | "dress_code"
   | "itinerary"
   | "gifts"
-  | "parents";
+  | "parents"
+  | "envelope_rain";
 
 export type AttendanceStatus = "pending" | "confirmed" | "declined";
 
@@ -47,6 +48,15 @@ export interface ModuleConfig {
   giftsText?: string;
   giftStoreUrl?: string;
   rsvpDeadline?: string;
+  // Envelope rain module
+  envelopeRainDescription?: string;
+  envelopeRainAccounts?: {
+    bankName: string;
+    accountHolder: string;
+    clabe: string;
+    accountNumber?: string;
+    alias?: string;
+  }[];
   // Parents module
   sectionTitle?: string;
   brideParentsLabel?: string;
