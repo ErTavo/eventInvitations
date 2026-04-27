@@ -108,48 +108,48 @@ function EnvelopeBranch({ color }: { color: string }) {
   );
 }
 
-// ── Golden ribbon across the envelope ─────────────────────────────────────────
+// ── Golden ribbon across the envelope (large bow) ────────────────────────────
 function GoldenRibbon({ color, width = 300 }: { color: string; width?: number }) {
   const cx = width / 2;
+  // Band sits at y=40–56 (center y=48) in this 110-tall viewBox.
+  // top:60 aligns the band over the envelope's seal area.
   return (
-    <svg width={width} height="56" viewBox={`0 0 ${width} 56`} fill="none"
-         className="absolute pointer-events-none" style={{ top: 79, left: 0, zIndex: 5 }}>
-      {/* Horizontal ribbon band */}
-      <rect x="0" y="20" width={width} height="16" fill={color} opacity="0.72" rx="1"/>
-      {/* Top highlight (sheen) */}
-      <rect x="0" y="20" width={width} height="5" fill="white" opacity="0.22" rx="1"/>
-      {/* Bottom shadow */}
-      <rect x="0" y="32" width={width} height="4" fill="black" opacity="0.07"/>
+    <svg width={width} height="110" viewBox={`0 0 ${width} 110`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 60, left: 0, zIndex: 5 }}>
 
-      {/* Bow center knot */}
-      <ellipse cx={cx} cy="28" rx="9" ry="7" fill={color} opacity="0.9"/>
-      <ellipse cx={cx} cy="28" rx="5" ry="4" fill={color} opacity="1"/>
-      {/* Knot highlight */}
-      <ellipse cx={cx - 2} cy="26" rx="2.5" ry="1.5" fill="white" opacity="0.35"/>
+      {/* ── Horizontal ribbon band ── */}
+      <rect x="0" y="40" width={width} height="16" fill={color} opacity="0.72" rx="1"/>
+      <rect x="0" y="40" width={width} height="5"  fill="white" opacity="0.22" rx="1"/>
+      <rect x="0" y="52" width={width} height="4"  fill="black" opacity="0.07"/>
 
-      {/* Left bow loop */}
-      <path d={`M${cx - 8} 28 C${cx - 30} 10 ${cx - 55} 8 ${cx - 45} 26 C${cx - 40} 36 ${cx - 20} 38 ${cx - 8} 28Z`}
+      {/* ── Left bow loop (2× bigger) ── */}
+      <path d={`M${cx-16} 48 C${cx-60} 6 ${cx-110} 2 ${cx-90} 34 C${cx-80} 56 ${cx-40} 60 ${cx-16} 48Z`}
             fill={color} opacity="0.78"/>
-      <path d={`M${cx - 8} 28 C${cx - 28} 12 ${cx - 52} 11 ${cx - 44} 27`}
-            stroke="white" strokeWidth="0.8" opacity="0.2" fill="none"/>
+      <path d={`M${cx-16} 48 C${cx-56} 10 ${cx-104} 8 ${cx-88} 36`}
+            stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
 
-      {/* Right bow loop */}
-      <path d={`M${cx + 8} 28 C${cx + 30} 10 ${cx + 55} 8 ${cx + 45} 26 C${cx + 40} 36 ${cx + 20} 38 ${cx + 8} 28Z`}
+      {/* ── Right bow loop (2× bigger) ── */}
+      <path d={`M${cx+16} 48 C${cx+60} 6 ${cx+110} 2 ${cx+90} 34 C${cx+80} 56 ${cx+40} 60 ${cx+16} 48Z`}
             fill={color} opacity="0.78"/>
-      <path d={`M${cx + 8} 28 C${cx + 28} 12 ${cx + 52} 11 ${cx + 44} 27`}
-            stroke="white" strokeWidth="0.8" opacity="0.2" fill="none"/>
+      <path d={`M${cx+16} 48 C${cx+56} 10 ${cx+104} 8 ${cx+88} 36`}
+            stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
 
-      {/* Left ribbon tail (falling down-left) */}
-      <path d={`M${cx - 6} 33 C${cx - 20} 44 ${cx - 35} 52 ${cx - 28} 56`}
-            stroke={color} strokeWidth="12" strokeLinecap="round" opacity="0.75"/>
-      <path d={`M${cx - 6} 33 C${cx - 18} 43 ${cx - 32} 50 ${cx - 26} 54`}
-            stroke="white" strokeWidth="1" opacity="0.18" fill="none"/>
+      {/* ── Center knot (2× bigger) ── */}
+      <ellipse cx={cx} cy="48" rx="18" ry="14" fill={color} opacity="0.9"/>
+      <ellipse cx={cx} cy="48" rx="10" ry="8"  fill={color} opacity="1"/>
+      <ellipse cx={cx - 4} cy="45" rx="5" ry="3" fill="white" opacity="0.3"/>
 
-      {/* Right ribbon tail (falling down-right) */}
-      <path d={`M${cx + 6} 33 C${cx + 20} 44 ${cx + 35} 52 ${cx + 28} 56`}
-            stroke={color} strokeWidth="12" strokeLinecap="round" opacity="0.75"/>
-      <path d={`M${cx + 6} 33 C${cx + 18} 43 ${cx + 32} 50 ${cx + 26} 54`}
-            stroke="white" strokeWidth="1" opacity="0.18" fill="none"/>
+      {/* ── Left tail ── */}
+      <path d={`M${cx-12} 56 C${cx-38} 76 ${cx-66} 98 ${cx-52} 110`}
+            stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
+      <path d={`M${cx-12} 56 C${cx-34} 74 ${cx-60} 94 ${cx-48} 106`}
+            stroke="white" strokeWidth="1.5" opacity="0.18" fill="none"/>
+
+      {/* ── Right tail ── */}
+      <path d={`M${cx+12} 56 C${cx+38} 76 ${cx+66} 98 ${cx+52} 110`}
+            stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
+      <path d={`M${cx+12} 56 C${cx+34} 74 ${cx+60} 94 ${cx+48} 106`}
+            stroke="white" strokeWidth="1.5" opacity="0.18" fill="none"/>
     </svg>
   );
 }
