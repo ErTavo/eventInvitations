@@ -108,6 +108,52 @@ function EnvelopeBranch({ color }: { color: string }) {
   );
 }
 
+// ── Golden ribbon across the envelope ─────────────────────────────────────────
+function GoldenRibbon({ color, width = 300 }: { color: string; width?: number }) {
+  const cx = width / 2;
+  return (
+    <svg width={width} height="56" viewBox={`0 0 ${width} 56`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 79, left: 0, zIndex: 5 }}>
+      {/* Horizontal ribbon band */}
+      <rect x="0" y="20" width={width} height="16" fill={color} opacity="0.72" rx="1"/>
+      {/* Top highlight (sheen) */}
+      <rect x="0" y="20" width={width} height="5" fill="white" opacity="0.22" rx="1"/>
+      {/* Bottom shadow */}
+      <rect x="0" y="32" width={width} height="4" fill="black" opacity="0.07"/>
+
+      {/* Bow center knot */}
+      <ellipse cx={cx} cy="28" rx="9" ry="7" fill={color} opacity="0.9"/>
+      <ellipse cx={cx} cy="28" rx="5" ry="4" fill={color} opacity="1"/>
+      {/* Knot highlight */}
+      <ellipse cx={cx - 2} cy="26" rx="2.5" ry="1.5" fill="white" opacity="0.35"/>
+
+      {/* Left bow loop */}
+      <path d={`M${cx - 8} 28 C${cx - 30} 10 ${cx - 55} 8 ${cx - 45} 26 C${cx - 40} 36 ${cx - 20} 38 ${cx - 8} 28Z`}
+            fill={color} opacity="0.78"/>
+      <path d={`M${cx - 8} 28 C${cx - 28} 12 ${cx - 52} 11 ${cx - 44} 27`}
+            stroke="white" strokeWidth="0.8" opacity="0.2" fill="none"/>
+
+      {/* Right bow loop */}
+      <path d={`M${cx + 8} 28 C${cx + 30} 10 ${cx + 55} 8 ${cx + 45} 26 C${cx + 40} 36 ${cx + 20} 38 ${cx + 8} 28Z`}
+            fill={color} opacity="0.78"/>
+      <path d={`M${cx + 8} 28 C${cx + 28} 12 ${cx + 52} 11 ${cx + 44} 27`}
+            stroke="white" strokeWidth="0.8" opacity="0.2" fill="none"/>
+
+      {/* Left ribbon tail (falling down-left) */}
+      <path d={`M${cx - 6} 33 C${cx - 20} 44 ${cx - 35} 52 ${cx - 28} 56`}
+            stroke={color} strokeWidth="12" strokeLinecap="round" opacity="0.75"/>
+      <path d={`M${cx - 6} 33 C${cx - 18} 43 ${cx - 32} 50 ${cx - 26} 54`}
+            stroke="white" strokeWidth="1" opacity="0.18" fill="none"/>
+
+      {/* Right ribbon tail (falling down-right) */}
+      <path d={`M${cx + 6} 33 C${cx + 20} 44 ${cx + 35} 52 ${cx + 28} 56`}
+            stroke={color} strokeWidth="12" strokeLinecap="round" opacity="0.75"/>
+      <path d={`M${cx + 6} 33 C${cx + 18} 43 ${cx + 32} 50 ${cx + 26} 54`}
+            stroke="white" strokeWidth="1" opacity="0.18" fill="none"/>
+    </svg>
+  );
+}
+
 function DeskSurface({ color }: { color: string }) {
   return (
     <svg width="100%" height="32" viewBox="0 0 400 32" preserveAspectRatio="none" fill="none">
@@ -391,6 +437,23 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
                      backfaceVisibility: "hidden",
                    }} />
             </motion.div>
+
+            {/* Golden ribbon — shown while idle, fades when opening */}
+            <AnimatePresence>
+              {phase === "idle" && (
+                <motion.div
+                  key="ribbon"
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.25 } }}
+                  transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+                  className="absolute inset-x-0"
+                  style={{ top: 0, zIndex: 5 }}
+                >
+                  <GoldenRibbon color={envBorder} width={300} />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Wax seal */}
             <AnimatePresence>
