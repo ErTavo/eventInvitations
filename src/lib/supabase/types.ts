@@ -31,6 +31,8 @@ export interface EventStyle {
   fontFamily: string;
   backgroundImage?: string;
   sealInitials?: string;
+  ribbonStyle?: "classic" | "crossed" | "minimal" | "floral" | "romantic" | "luxury";
+  sealTextColor?: string;
   eventType?: EventType;
   person1Name?: string;
   person2Name?: string;

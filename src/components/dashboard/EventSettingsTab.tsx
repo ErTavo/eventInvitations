@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import type { Event, EventStyle, ThemeId, EventType } from "@/lib/supabase/types";
+type RibbonStyle = "classic" | "crossed" | "minimal" | "floral" | "romantic" | "luxury";
 import ImageUpload from "@/components/ui/ImageUpload";
 
 interface Props { event: Event }
@@ -92,10 +93,13 @@ export default function EventSettingsTab({ event }: Props) {
   const [textColor,      setTextColor]      = useState(event.style.textColor      ?? "#2c2c2c");
   const [fontFamily,     setFontFamily]     = useState(event.style.fontFamily     ?? "Cormorant Garamond");
   const [sealInitials,   setSealInitials]   = useState(event.style.sealInitials   ?? "");
+  const [sealTextColor,  setSealTextColor]  = useState(event.style.sealTextColor  ?? "");
   const [eventType,      setEventType]      = useState<EventType>(event.style.eventType ?? "general");
   const [person1Name,    setPerson1Name]    = useState(event.style.person1Name   ?? "");
   const [person2Name,    setPerson2Name]    = useState(event.style.person2Name   ?? "");
   const [greetingText,   setGreetingText]   = useState(event.style.greetingText  ?? "");
+
+  const [ribbonStyle, setRibbonStyle] = useState<RibbonStyle>((event.style.ribbonStyle as RibbonStyle) ?? "classic");
 
   const isCustom    = selectedTheme === "custom";
   const isElegant   = selectedTheme === "elegant";
@@ -145,9 +149,9 @@ export default function EventSettingsTab({ event }: Props) {
       ...(person1Name.trim()  ? { person1Name:  person1Name.trim()  } : {}),
       ...(person2Name.trim()  ? { person2Name:  person2Name.trim()  } : {}),
       ...(greetingText.trim() ? { greetingText: greetingText.trim() } : {}),
-      ...(showSeal && sealInitials.trim()
-        ? { sealInitials: sealInitials.trim().slice(0, 2) }
-        : {}),
+      ribbonStyle,
+      ...(showSeal && sealInitials.trim()   ? { sealInitials: sealInitials.trim().slice(0, 2) } : {}),
+      ...(showSeal && sealTextColor.trim() ? { sealTextColor: sealTextColor.trim() } : {}),
     };
     const res = await fetch(`/api/events/${event.id}`, {
       method: "PATCH",
@@ -321,6 +325,134 @@ export default function EventSettingsTab({ event }: Props) {
                 </span>
               </div>
               <p className="text-xs text-stone-400">Vista previa</p>
+            </div>
+            {/* Seal text color */}
+            <div className="flex items-center gap-3 pt-1">
+              <label className="text-xs font-medium text-stone-600 shrink-0">Color de las iniciales</label>
+              <input
+                type="color"
+                value={sealTextColor || (selectedTheme === "leaves" ? "#2c5f2e" : "#142209")}
+                onChange={(e) => setSealTextColor(e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer border border-stone-200 p-0.5 bg-white"
+              />
+              <input
+                type="text"
+                value={sealTextColor}
+                onChange={(e) => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) setSealTextColor(e.target.value); }}
+                placeholder="Auto"
+                className="w-20 border border-stone-200 rounded px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-400"
+              />
+              {sealTextColor && (
+                <button type="button" onClick={() => setSealTextColor("")}
+                  className="text-xs text-stone-400 hover:text-stone-700 underline">
+                  Auto
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Ribbon style picker */}
+        {showSeal && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-stone-700">Diseño del moño / listón</label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { id: "classic",  label: "Clásico",   preview: "M16 20 C5 5 -5 4 2 14 C5 20 12 22 16 20Z M24 20 C35 5 45 4 38 14 C35 20 28 22 24 20Z" },
+                { id: "crossed",  label: "Cruzado",   preview: "M4 0 L22 40 L26 40 L8 0Z M36 0 L14 40 L18 40 L40 0Z" },
+                { id: "minimal",  label: "Minimal",   preview: "M0 19 L40 19 M0 21 L40 21 M6 20 C2 12 -2 11 2 17 C3 21 5 22 6 20Z M6 20 C2 28 -2 29 2 23Z M34 20 C38 12 42 11 38 17Z M34 20 C38 28 42 29 38 23Z" },
+                { id: "floral",   label: "Floral",    preview: "M0 20 L40 20 M20 12 C17 8 12 9 15 13 C17 16 20 12 20 12 C20 12 23 16 25 13 C28 9 23 8 20 12Z M20 28 C17 32 12 31 15 27Z M20 28 C23 32 28 31 25 27Z" },
+                { id: "romantic", label: "Romántico", preview: "M16 20 C12 12 2 14 6 19 C8 22 12 23 16 20Z M24 20 C28 12 38 14 34 19 C32 22 28 23 24 20Z M20 22 C20 19 14 15 14 18 C14 21 20 26 20 26 C20 26 26 21 26 18 C26 15 20 19 20 22Z" },
+                { id: "luxury",   label: "Lujo",      preview: "M0 16 L40 16 M0 24 L40 24 M0 20 L40 20 M16 20 L4 2 L8 5 L18 20 L8 35 L4 38 Z M24 20 L36 2 L32 5 L22 20 L32 35 L36 38Z M13 14 L27 14 L27 26 L13 26Z" },
+              ] as { id: RibbonStyle; label: string; preview: string }[]).map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setRibbonStyle(r.id)}
+                  className={`rounded border-2 p-2 text-center transition-all ${
+                    ribbonStyle === r.id ? "border-stone-800 shadow-sm bg-stone-50" : "border-stone-200 hover:border-stone-400"
+                  }`}
+                >
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="mx-auto mb-1">
+                    {r.id === "crossed" ? (
+                      <>
+                        <path d="M4 0 L22 40 L26 40 L8 0Z" fill={accentColor} opacity="0.7"/>
+                        <path d="M36 0 L14 40 L18 40 L40 0Z" fill={accentColor} opacity="0.7"/>
+                        <circle cx="20" cy="20" r="4" fill={accentColor} opacity="0.95"/>
+                      </>
+                    ) : r.id === "minimal" ? (
+                      <>
+                        <rect x="0" y="18" width="40" height="4" fill={accentColor} opacity="0.7" rx="2"/>
+                        <path d="M7 20 C3 13 -1 12 1 17 C2 21 5 22 7 20Z" fill={accentColor} opacity="0.85"/>
+                        <path d="M7 20 C3 27 -1 28 1 23Z" fill={accentColor} opacity="0.75"/>
+                        <path d="M33 20 C37 13 41 12 39 17Z" fill={accentColor} opacity="0.85"/>
+                        <path d="M33 20 C37 27 41 28 39 23Z" fill={accentColor} opacity="0.75"/>
+                        <circle cx="20" cy="20" r="2.5" fill={accentColor}/>
+                      </>
+                    ) : r.id === "floral" ? (
+                      <>
+                        <rect x="0" y="18" width="40" height="4" fill={accentColor} opacity="0.6" rx="1"/>
+                        {[0,60,120,180,240,300].map((deg,i)=>(
+                          <ellipse key={i} cx={20+Math.cos(deg*Math.PI/180)*5} cy={20+Math.sin(deg*Math.PI/180)*5} rx="5" ry="3"
+                                   fill={accentColor} opacity={0.65-i*0.05} transform={`rotate(${deg} ${20+Math.cos(deg*Math.PI/180)*5} ${20+Math.sin(deg*Math.PI/180)*5})`}/>
+                        ))}
+                        <circle cx="20" cy="20" r="2.5" fill={accentColor} opacity="0.9"/>
+                      </>
+                    ) : r.id === "romantic" ? (
+                      // Teardrop loops + heart — matches full-size
+                      <>
+                        <rect x="0" y="19" width="40" height="4" fill={accentColor} opacity="0.62" rx="1"/>
+                        {/* Left teardrop */}
+                        <path d="M16 21 C15 13,9 3,5 5 C1 7,1 16,6 20 C9 23,14 24,16 21Z" fill={accentColor} opacity="0.75"/>
+                        <path d="M16 21 C14 14,8 5,5 6" stroke="white" strokeWidth="0.8" opacity="0.25" fill="none"/>
+                        {/* Right teardrop */}
+                        <path d="M24 21 C25 13,31 3,35 5 C39 7,39 16,34 20 C31 23,26 24,24 21Z" fill={accentColor} opacity="0.75"/>
+                        {/* Heart */}
+                        <path d="M20 25 C19.8 23.5,17 21.5,17 23 C17 24.5,20 27,20 27 C20 27,23 24.5,23 23 C23 21.5,20.2 23.5,20 25Z" fill={accentColor} opacity="1"/>
+                        <ellipse cx="18.5" cy="22.5" rx="1.2" ry="0.8" fill="white" opacity="0.35"/>
+                      </>
+                    ) : r.id === "luxury" ? (
+                      // Angular fan-wing bow — matches full-size
+                      <>
+                        <rect x="0" y="15" width="40" height="10" fill={accentColor} opacity="0.68" rx="1"/>
+                        <rect x="0" y="12" width="40" height="3"  fill={accentColor} opacity="0.4"  rx="1"/>
+                        <rect x="0" y="25" width="40" height="3"  fill={accentColor} opacity="0.32" rx="1"/>
+                        {/* Left top fan */}
+                        <polygon points="14,20 0,1 5,3"   fill={accentColor} opacity="0.82"/>
+                        <polygon points="14,20 5,3 9,7"   fill={accentColor} opacity="0.65"/>
+                        <polygon points="14,20 9,7 12,11" fill={accentColor} opacity="0.5"/>
+                        {/* Left bottom fan */}
+                        <polygon points="14,20 0,39 5,37" fill={accentColor} opacity="0.82"/>
+                        <polygon points="14,20 5,37 9,33" fill={accentColor} opacity="0.65"/>
+                        {/* Right top fan */}
+                        <polygon points="26,20 40,1 35,3"   fill={accentColor} opacity="0.82"/>
+                        <polygon points="26,20 35,3 31,7"   fill={accentColor} opacity="0.65"/>
+                        <polygon points="26,20 31,7 28,11" fill={accentColor} opacity="0.5"/>
+                        {/* Right bottom fan */}
+                        <polygon points="26,20 40,39 35,37" fill={accentColor} opacity="0.82"/>
+                        <polygon points="26,20 35,37 31,33" fill={accentColor} opacity="0.65"/>
+                        {/* Center knot */}
+                        <rect x="13" y="13" width="14" height="14" fill={accentColor} opacity="0.95" rx="1"/>
+                        <line x1="17" y1="14" x2="17" y2="26" stroke="white" strokeWidth="0.8" opacity="0.2"/>
+                        <line x1="21" y1="14" x2="21" y2="26" stroke="white" strokeWidth="0.6" opacity="0.15"/>
+                        <rect x="15" y="15" width="5" height="10" fill="white" opacity="0.15" rx="0.5"/>
+                      </>
+                    ) : (
+                      // classic
+                      <>
+                        <rect x="0" y="18" width="40" height="6" fill={accentColor} opacity="0.7" rx="1"/>
+                        <path d="M16 21 C8 6 -2 4 4 14 C7 20 12 23 16 21Z" fill={accentColor} opacity="0.8"/>
+                        <path d="M24 21 C32 6 42 4 36 14 C33 20 28 23 24 21Z" fill={accentColor} opacity="0.8"/>
+                        <ellipse cx="20" cy="21" rx="6" ry="5" fill={accentColor} opacity="0.95"/>
+                        <ellipse cx="18" cy="19" rx="2" ry="1.2" fill="white" opacity="0.35"/>
+                        <path d="M17 26 C14 32 11 38 14 40" stroke={accentColor} strokeWidth="4" strokeLinecap="round" opacity="0.75"/>
+                        <path d="M23 26 C26 32 29 38 26 40" stroke={accentColor} strokeWidth="4" strokeLinecap="round" opacity="0.75"/>
+                      </>
+                    )}
+                  </svg>
+                  <span className="text-xs text-stone-600">{r.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}

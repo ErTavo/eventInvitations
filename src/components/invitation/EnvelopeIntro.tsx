@@ -108,50 +108,323 @@ function EnvelopeBranch({ color }: { color: string }) {
   );
 }
 
-// ── Golden ribbon across the envelope (large bow) ────────────────────────────
-function GoldenRibbon({ color, width = 300 }: { color: string; width?: number }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Wax seal SVG — realistic dripped-wax look
+// ─────────────────────────────────────────────────────────────────────────────
+
+function WaxSealSvg({ bg, fg, initials, size = 56 }: {
+  bg: string; fg: string; initials: string; size?: number;
+}) {
+  const c = size / 2;
+  const outerR = c - 2;
+
+  // Bumpy outer edge (alternating slightly larger bumps simulating wax drips)
+  function bumpyPath(r: number, bump: number, n = 20): string {
+    const pts: string[] = [];
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
+      const rad = i % 2 === 0 ? r : r + bump;
+      pts.push(`${(c + rad * Math.cos(angle)).toFixed(2)},${(c + rad * Math.sin(angle)).toFixed(2)}`);
+    }
+    return `M ${pts.join(" L ")} Z`;
+  }
+
+  // Radial tick marks inside the ring (like a stamp impression)
+  const ticks = Array.from({ length: 16 }).map((_, i) => {
+    const angle = (i / 16) * 2 * Math.PI;
+    const r1 = outerR - 6;
+    const r2 = outerR - 10;
+    return {
+      x1: c + r1 * Math.cos(angle), y1: c + r1 * Math.sin(angle),
+      x2: c + r2 * Math.cos(angle), y2: c + r2 * Math.sin(angle),
+    };
+  });
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+         style={{ filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.40))" }}>
+
+      {/* Outer wax blob with bumpy edge */}
+      <path d={bumpyPath(outerR, 2.8)} fill={bg} opacity="0.97"/>
+
+      {/* Subtle inner depth shadow */}
+      <circle cx={c+1} cy={c+2} r={outerR - 5} fill="black" opacity="0.1"/>
+
+      {/* Pressed impression area (slightly lighter) */}
+      <circle cx={c} cy={c} r={outerR - 5} fill={bg} opacity="0.35"/>
+
+      {/* Outer decorative ring */}
+      <circle cx={c} cy={c} r={outerR - 5} stroke={fg} strokeWidth="0.9" opacity="0.35" fill="none"/>
+
+      {/* Radial tick marks */}
+      {ticks.map((t, i) => (
+        <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+              stroke={fg} strokeWidth="0.8" opacity="0.22"/>
+      ))}
+
+      {/* Inner ring */}
+      <circle cx={c} cy={c} r={outerR - 11} stroke={fg} strokeWidth="0.7" opacity="0.2" fill="none"/>
+
+      {/* Initials or star */}
+      {initials ? (
+        <text x={c} y={c + size * 0.18} textAnchor="middle"
+              fill={fg} opacity="0.92"
+              style={{ fontFamily: "Great Vibes, cursive", fontSize: `${size * 0.36}px` }}>
+          {initials}
+        </text>
+      ) : (
+        <>
+          {/* Decorative star + inner dots when no initials */}
+          <text x={c} y={c + size * 0.16} textAnchor="middle"
+                fill={fg} opacity="0.8"
+                style={{ fontSize: `${size * 0.38}px` }}>✦</text>
+          {/* 4 small dots at cardinal positions */}
+          {[0, 90, 180, 270].map((deg, i) => {
+            const a = deg * Math.PI / 180;
+            const dr = outerR - 16;
+            return <circle key={i} cx={c + dr * Math.cos(a)} cy={c + dr * Math.sin(a)}
+                           r="1.5" fill={fg} opacity="0.25"/>;
+          })}
+        </>
+      )}
+
+      {/* Top highlight for wax convexity */}
+      <ellipse cx={c - size*0.08} cy={c - size*0.18} rx={size*0.22} ry={size*0.1}
+               fill="white" opacity="0.18"/>
+    </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ribbon designs — 6 styles, all sharing (color, width) props
+// SVG height and top offset vary per design.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type RibbonStyle = "classic" | "crossed" | "minimal" | "floral" | "romantic" | "luxury";
+
+// 1. CLASSIC — big bow with two loops and falling tails
+function RibbonClassic({ color, width }: { color: string; width: number }) {
   const cx = width / 2;
-  // Band sits at y=40–56 (center y=48) in this 110-tall viewBox.
-  // top:60 aligns the band over the envelope's seal area.
   return (
     <svg width={width} height="110" viewBox={`0 0 ${width} 110`} fill="none"
          className="absolute pointer-events-none" style={{ top: 60, left: 0, zIndex: 5 }}>
-
-      {/* ── Horizontal ribbon band ── */}
       <rect x="0" y="40" width={width} height="16" fill={color} opacity="0.72" rx="1"/>
       <rect x="0" y="40" width={width} height="5"  fill="white" opacity="0.22" rx="1"/>
       <rect x="0" y="52" width={width} height="4"  fill="black" opacity="0.07"/>
-
-      {/* ── Left bow loop (2× bigger) ── */}
-      <path d={`M${cx-16} 48 C${cx-60} 6 ${cx-110} 2 ${cx-90} 34 C${cx-80} 56 ${cx-40} 60 ${cx-16} 48Z`}
-            fill={color} opacity="0.78"/>
-      <path d={`M${cx-16} 48 C${cx-56} 10 ${cx-104} 8 ${cx-88} 36`}
-            stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
-
-      {/* ── Right bow loop (2× bigger) ── */}
-      <path d={`M${cx+16} 48 C${cx+60} 6 ${cx+110} 2 ${cx+90} 34 C${cx+80} 56 ${cx+40} 60 ${cx+16} 48Z`}
-            fill={color} opacity="0.78"/>
-      <path d={`M${cx+16} 48 C${cx+56} 10 ${cx+104} 8 ${cx+88} 36`}
-            stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
-
-      {/* ── Center knot (2× bigger) ── */}
+      <path d={`M${cx-16} 48 C${cx-60} 6 ${cx-110} 2 ${cx-90} 34 C${cx-80} 56 ${cx-40} 60 ${cx-16} 48Z`} fill={color} opacity="0.78"/>
+      <path d={`M${cx-16} 48 C${cx-56} 10 ${cx-104} 8 ${cx-88} 36`} stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
+      <path d={`M${cx+16} 48 C${cx+60} 6 ${cx+110} 2 ${cx+90} 34 C${cx+80} 56 ${cx+40} 60 ${cx+16} 48Z`} fill={color} opacity="0.78"/>
+      <path d={`M${cx+16} 48 C${cx+56} 10 ${cx+104} 8 ${cx+88} 36`} stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
       <ellipse cx={cx} cy="48" rx="18" ry="14" fill={color} opacity="0.9"/>
       <ellipse cx={cx} cy="48" rx="10" ry="8"  fill={color} opacity="1"/>
-      <ellipse cx={cx - 4} cy="45" rx="5" ry="3" fill="white" opacity="0.3"/>
-
-      {/* ── Left tail ── */}
-      <path d={`M${cx-12} 56 C${cx-38} 76 ${cx-66} 98 ${cx-52} 110`}
-            stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
-      <path d={`M${cx-12} 56 C${cx-34} 74 ${cx-60} 94 ${cx-48} 106`}
-            stroke="white" strokeWidth="1.5" opacity="0.18" fill="none"/>
-
-      {/* ── Right tail ── */}
-      <path d={`M${cx+12} 56 C${cx+38} 76 ${cx+66} 98 ${cx+52} 110`}
-            stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
-      <path d={`M${cx+12} 56 C${cx+34} 74 ${cx+60} 94 ${cx+48} 106`}
-            stroke="white" strokeWidth="1.5" opacity="0.18" fill="none"/>
+      <ellipse cx={cx-4} cy="45" rx="5" ry="3" fill="white" opacity="0.3"/>
+      <path d={`M${cx-12} 56 C${cx-38} 76 ${cx-66} 98 ${cx-52} 110`} stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
+      <path d={`M${cx+12} 56 C${cx+38} 76 ${cx+66} 98 ${cx+52} 110`} stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
     </svg>
   );
+}
+
+// 2. CROSSED — two diagonal ribbons forming an X with a round knot at center
+function RibbonCrossed({ color, width }: { color: string; width: number }) {
+  const cx = width / 2; const h = 210;
+  return (
+    <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 0, left: 0, zIndex: 5 }}>
+      {/* Diagonal band top-left → bottom-right */}
+      <path d={`M-10 0 L${width * 0.35} ${h} L${width * 0.45} ${h} L10 0Z`} fill={color} opacity="0.55"/>
+      <path d={`M2 0 L${width * 0.37} ${h}`} stroke="white" strokeWidth="1.5" opacity="0.2"/>
+      {/* Diagonal band top-right → bottom-left */}
+      <path d={`M${width+10} 0 L${width * 0.65} ${h} L${width * 0.55} ${h} L${width-10} 0Z`} fill={color} opacity="0.55"/>
+      <path d={`M${width-2} 0 L${width * 0.63} ${h}`} stroke="white" strokeWidth="1.5" opacity="0.2"/>
+      {/* Center knot */}
+      <ellipse cx={cx} cy={h/2} rx="16" ry="16" fill={color} opacity="0.95"/>
+      <ellipse cx={cx} cy={h/2} rx="9"  ry="9"  fill={color} opacity="1"/>
+      <ellipse cx={cx-3} cy={h/2-3} rx="4" ry="2.5" fill="white" opacity="0.35"/>
+    </svg>
+  );
+}
+
+// 3. MINIMAL — single thin band with small side bows at both ends
+function RibbonMinimal({ color, width }: { color: string; width: number }) {
+  const cx = width / 2;
+  return (
+    <svg width={width} height="70" viewBox={`0 0 ${width} 70`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 70, left: 0, zIndex: 5 }}>
+      {/* Thin band */}
+      <rect x="0" y="30" width={width} height="10" fill={color} opacity="0.65" rx="5"/>
+      <rect x="0" y="30" width={width} height="3"  fill="white" opacity="0.25" rx="5"/>
+      {/* Left small bow */}
+      <path d={`M18 35 C10 20 0 18 4 30 C6 38 14 40 18 35Z`} fill={color} opacity="0.8"/>
+      <path d={`M18 35 C10 50 0 52 4 40 C6 32 14 30 18 35Z`} fill={color} opacity="0.7"/>
+      <ellipse cx="18" cy="35" rx="5" ry="4" fill={color} opacity="0.95"/>
+      <ellipse cx="16" cy="33" rx="2" ry="1.5" fill="white" opacity="0.35"/>
+      {/* Right small bow (mirror) */}
+      <path d={`M${width-18} 35 C${width-10} 20 ${width} 18 ${width-4} 30 C${width-6} 38 ${width-14} 40 ${width-18} 35Z`} fill={color} opacity="0.8"/>
+      <path d={`M${width-18} 35 C${width-10} 50 ${width} 52 ${width-4} 40 C${width-6} 32 ${width-14} 30 ${width-18} 35Z`} fill={color} opacity="0.7"/>
+      <ellipse cx={width-18} cy="35" rx="5" ry="4" fill={color} opacity="0.95"/>
+      <ellipse cx={width-16} cy="33" rx="2" ry="1.5" fill="white" opacity="0.35"/>
+      {/* Center accent */}
+      <circle cx={cx} cy="35" r="5" fill={color} opacity="1"/>
+      <circle cx={cx} cy="35" r="2.5" fill="white" opacity="0.35"/>
+    </svg>
+  );
+}
+
+// 4. FLORAL — ribbon band with rose/flower clusters at center and sides
+function RibbonFloral({ color, width }: { color: string; width: number }) {
+  const cx = width / 2;
+  function Rose({ x, y, r = 10 }: { x: number; y: number; r?: number }) {
+    return (
+      <g>
+        {[0,60,120,180,240,300].map((deg, i) => (
+          <ellipse key={i} cx={x + Math.cos(deg*Math.PI/180)*r*0.55} cy={y + Math.sin(deg*Math.PI/180)*r*0.55}
+                   rx={r*0.55} ry={r*0.35} fill={color} opacity={0.7 - i*0.05}
+                   transform={`rotate(${deg} ${x + Math.cos(deg*Math.PI/180)*r*0.55} ${y + Math.sin(deg*Math.PI/180)*r*0.55})`}/>
+        ))}
+        <circle cx={x} cy={y} r={r*0.28} fill={color} opacity="0.95"/>
+        <circle cx={x-r*0.08} cy={y-r*0.08} r={r*0.12} fill="white" opacity="0.4"/>
+      </g>
+    );
+  }
+  return (
+    <svg width={width} height="80" viewBox={`0 0 ${width} 80`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 65, left: 0, zIndex: 5 }}>
+      <rect x="0" y="36" width={width} height="12" fill={color} opacity="0.6" rx="1"/>
+      <rect x="0" y="36" width={width} height="4"  fill="white" opacity="0.2" rx="1"/>
+      {/* Left leaf sprigs */}
+      <path d={`M${cx-55} 42 C${cx-70} 30 ${cx-80} 28 ${cx-72} 36`} stroke={color} strokeWidth="1.5" opacity="0.5" fill="none"/>
+      <ellipse cx={cx-74} cy="30" rx="8" ry="4.5" fill={color} opacity="0.42" transform={`rotate(-40 ${cx-74} 30)`}/>
+      <path d={`M${cx-55} 42 C${cx-68} 52 ${cx-78} 54 ${cx-70} 46`} stroke={color} strokeWidth="1.5" opacity="0.45" fill="none"/>
+      <ellipse cx={cx-72} cy="52" rx="7" ry="4" fill={color} opacity="0.38" transform={`rotate(35 ${cx-72} 52)`}/>
+      {/* Right leaf sprigs (mirror) */}
+      <path d={`M${cx+55} 42 C${cx+70} 30 ${cx+80} 28 ${cx+72} 36`} stroke={color} strokeWidth="1.5" opacity="0.5" fill="none"/>
+      <ellipse cx={cx+74} cy="30" rx="8" ry="4.5" fill={color} opacity="0.42" transform={`rotate(40 ${cx+74} 30)`}/>
+      <path d={`M${cx+55} 42 C${cx+68} 52 ${cx+78} 54 ${cx+70} 46`} stroke={color} strokeWidth="1.5" opacity="0.45" fill="none"/>
+      <ellipse cx={cx+72} cy="52" rx="7" ry="4" fill={color} opacity="0.38" transform={`rotate(-35 ${cx+72} 52)`}/>
+      {/* Roses */}
+      <Rose x={cx-42} y={42} r={11}/>
+      <Rose x={cx+42} y={42} r={11}/>
+      <Rose x={cx} y={42} r={13}/>
+    </svg>
+  );
+}
+
+// 5. ROMANTIC — tall teardrop loops + prominent heart center
+function RibbonRomantic({ color, width }: { color: string; width: number }) {
+  const cx = width / 2;
+  // Heart path helper: heart centered at (hx, hy) with radius hr
+  const heart = (hx: number, hy: number, hr: number) =>
+    `M${hx} ${hy+hr} C${hx-hr*0.15} ${hy+hr*0.7},${hx-hr} ${hy+hr*0.5},${hx-hr} ${hy+hr*0.1} C${hx-hr} ${hy-hr*0.35},${hx-hr*0.5} ${hy-hr*0.6},${hx} ${hy-hr*0.2} C${hx+hr*0.5} ${hy-hr*0.6},${hx+hr} ${hy-hr*0.35},${hx+hr} ${hy+hr*0.1} C${hx+hr} ${hy+hr*0.5},${hx+hr*0.15} ${hy+hr*0.7},${hx} ${hy+hr} Z`;
+
+  return (
+    <svg width={width} height="110" viewBox={`0 0 ${width} 110`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 60, left: 0, zIndex: 5 }}>
+      {/* Band */}
+      <rect x="0" y="46" width={width} height="12" fill={color} opacity="0.62" rx="1"/>
+      <rect x="0" y="46" width={width} height="4"  fill="white" opacity="0.2" rx="1"/>
+
+      {/* Left teardrop loop — tall, narrow, elegant */}
+      <path d={`M${cx-12} 52 C${cx-14} 28,${cx-32} 6,${cx-48} 10 C${cx-64} 14,${cx-68} 34,${cx-56} 46 C${cx-48} 53,${cx-26} 57,${cx-12} 52Z`}
+            fill={color} opacity="0.75"/>
+      <path d={`M${cx-12} 52 C${cx-15} 32,${cx-34} 12,${cx-47} 12`}
+            stroke="white" strokeWidth="1.5" opacity="0.25" fill="none"/>
+
+      {/* Right teardrop loop (mirror) */}
+      <path d={`M${cx+12} 52 C${cx+14} 28,${cx+32} 6,${cx+48} 10 C${cx+64} 14,${cx+68} 34,${cx+56} 46 C${cx+48} 53,${cx+26} 57,${cx+12} 52Z`}
+            fill={color} opacity="0.75"/>
+      <path d={`M${cx+12} 52 C${cx+15} 32,${cx+34} 12,${cx+47} 12`}
+            stroke="white" strokeWidth="1.5" opacity="0.25" fill="none"/>
+
+      {/* Tails — pointed like cut ribbon */}
+      <path d={`M${cx-10} 58 C${cx-22} 74,${cx-38} 96,${cx-26} 108 C${cx-20} 114,${cx-18} 108,${cx-14} 102 C${cx-10} 96,${cx-10} 82,${cx-10} 58`}
+            fill={color} opacity="0.68"/>
+      <path d={`M${cx+10} 58 C${cx+22} 74,${cx+38} 96,${cx+26} 108 C${cx+20} 114,${cx+18} 108,${cx+14} 102 C${cx+10} 96,${cx+10} 82,${cx+10} 58`}
+            fill={color} opacity="0.68"/>
+
+      {/* Large heart at center */}
+      <path d={heart(cx, 50, 13)} fill={color} opacity="1"/>
+      {/* Heart highlight */}
+      <path d={heart(cx-1, 48, 5)} fill="white" opacity="0.28"/>
+    </svg>
+  );
+}
+
+// 6. LUXURY — full-height angular fan bow spanning the entire envelope
+function RibbonLuxury({ color, width }: { color: string; width: number }) {
+  const cx = width / 2;
+  const cy = 105; // center of 210px envelope
+  const h  = 210; // full envelope height
+  // Hinge points (where fan radiates from)
+  const lx = cx - 18; const rx = cx + 18;
+  // Fan outer reach: nearly to envelope edges
+  const outerX = 8;
+
+  return (
+    <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 0, left: 0, zIndex: 5 }}>
+
+      {/* ── Double band ── */}
+      <rect x="0" y={cy-11} width={width} height="22" fill={color} opacity="0.68" rx="1"/>
+      <rect x="0" y={cy-11} width={width} height="6"  fill="white" opacity="0.2"  rx="1"/>
+      <rect x="0" y={cy+9}  width={width} height="4"  fill="black" opacity="0.07"/>
+      <rect x="0" y={cy-18} width={width} height="7"  fill={color} opacity="0.38" rx="1"/>
+      <rect x="0" y={cy+13} width={width} height="6"  fill={color} opacity="0.3"  rx="1"/>
+
+      {/* ── LEFT fans — 4 panels top + 4 panels bottom ── */}
+      {/* Top outer → inner */}
+      <polygon points={`${lx},${cy} ${outerX},2      ${outerX+26},14`}    fill={color} opacity="0.85"/>
+      <polygon points={`${lx},${cy} ${outerX+26},14  ${outerX+52},28`}    fill={color} opacity="0.72"/>
+      <polygon points={`${lx},${cy} ${outerX+52},28  ${outerX+76},44`}    fill={color} opacity="0.60"/>
+      <polygon points={`${lx},${cy} ${outerX+76},44  ${outerX+98},60`}    fill={color} opacity="0.48"/>
+      {/* Bottom outer → inner */}
+      <polygon points={`${lx},${cy} ${outerX},${h-2}      ${outerX+26},${h-14}`} fill={color} opacity="0.85"/>
+      <polygon points={`${lx},${cy} ${outerX+26},${h-14}  ${outerX+52},${h-28}`} fill={color} opacity="0.72"/>
+      <polygon points={`${lx},${cy} ${outerX+52},${h-28}  ${outerX+76},${h-44}`} fill={color} opacity="0.60"/>
+      <polygon points={`${lx},${cy} ${outerX+76},${h-44}  ${outerX+98},${h-60}`} fill={color} opacity="0.48"/>
+      {/* Sheen edge lines */}
+      <line x1={lx} y1={cy} x2={outerX}     y2="2"      stroke="white" strokeWidth="1.2" opacity="0.25"/>
+      <line x1={lx} y1={cy} x2={outerX+26}  y2="14"     stroke="white" strokeWidth="0.9" opacity="0.18"/>
+      <line x1={lx} y1={cy} x2={outerX+52}  y2="28"     stroke="white" strokeWidth="0.7" opacity="0.12"/>
+      <line x1={lx} y1={cy} x2={outerX}     y2={h-2}    stroke="white" strokeWidth="1.2" opacity="0.2"/>
+      <line x1={lx} y1={cy} x2={outerX+26}  y2={h-14}   stroke="white" strokeWidth="0.9" opacity="0.14"/>
+
+      {/* ── RIGHT fans — mirror ── */}
+      <polygon points={`${rx},${cy} ${width-outerX},2      ${width-outerX-26},14`}    fill={color} opacity="0.85"/>
+      <polygon points={`${rx},${cy} ${width-outerX-26},14  ${width-outerX-52},28`}    fill={color} opacity="0.72"/>
+      <polygon points={`${rx},${cy} ${width-outerX-52},28  ${width-outerX-76},44`}    fill={color} opacity="0.60"/>
+      <polygon points={`${rx},${cy} ${width-outerX-76},44  ${width-outerX-98},60`}    fill={color} opacity="0.48"/>
+      <polygon points={`${rx},${cy} ${width-outerX},${h-2}      ${width-outerX-26},${h-14}`} fill={color} opacity="0.85"/>
+      <polygon points={`${rx},${cy} ${width-outerX-26},${h-14}  ${width-outerX-52},${h-28}`} fill={color} opacity="0.72"/>
+      <polygon points={`${rx},${cy} ${width-outerX-52},${h-28}  ${width-outerX-76},${h-44}`} fill={color} opacity="0.60"/>
+      <polygon points={`${rx},${cy} ${width-outerX-76},${h-44}  ${width-outerX-98},${h-60}`} fill={color} opacity="0.48"/>
+      <line x1={rx} y1={cy} x2={width-outerX}    y2="2"      stroke="white" strokeWidth="1.2" opacity="0.25"/>
+      <line x1={rx} y1={cy} x2={width-outerX-26} y2="14"     stroke="white" strokeWidth="0.9" opacity="0.18"/>
+      <line x1={rx} y1={cy} x2={width-outerX}    y2={h-2}    stroke="white" strokeWidth="1.2" opacity="0.2"/>
+
+      {/* ── Center knot ── */}
+      <rect x={cx-38} y={cy-22} width="76" height="44" fill={color} opacity="0.95" rx="3"/>
+      <rect x={cx-28} y={cy-16} width="56" height="32" fill={color} opacity="1"    rx="2"/>
+      <line x1={cx-16} y1={cy-14} x2={cx-16} y2={cy+14} stroke="white" strokeWidth="1.4" opacity="0.22"/>
+      <line x1={cx+16} y1={cy-14} x2={cx+16} y2={cy+14} stroke="white" strokeWidth="1.4" opacity="0.18"/>
+      <line x1={cx-24} y1={cy-6}  x2={cx+24} y2={cy-6}  stroke="white" strokeWidth="0.9" opacity="0.14"/>
+      <line x1={cx-24} y1={cy+6}  x2={cx+24} y2={cy+6}  stroke="white" strokeWidth="0.7" opacity="0.1"/>
+      <rect x={cx-14}  y={cy-13}  width="12" height="26" fill="white"   opacity="0.14"    rx="2"/>
+    </svg>
+  );
+}
+
+// ── Main dispatcher ────────────────────────────────────────────────────────────
+function GoldenRibbon({ color, width = 300, style = "classic" }: {
+  color: string; width?: number; style?: RibbonStyle;
+}) {
+  switch (style) {
+    case "crossed":  return <RibbonCrossed  color={color} width={width} />;
+    case "minimal":  return <RibbonMinimal  color={color} width={width} />;
+    case "floral":   return <RibbonFloral   color={color} width={width} />;
+    case "romantic": return <RibbonRomantic color={color} width={width} />;
+    case "luxury":   return <RibbonLuxury   color={color} width={width} />;
+    default:         return <RibbonClassic  color={color} width={width} />;
+  }
 }
 
 function DeskSurface({ color }: { color: string }) {
@@ -196,7 +469,8 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
   const cardText  = isBotanical ? "#1e3314" : theme.primary;
   const hintColor = isBotanical ? "#c9a96e" : theme.primary;
   const sealBg    = isBotanical ? "#c9a96e" : theme.primary;
-  const sealFg    = isBotanical ? "#0e1c09" : "#fff";
+  const sealFgDefault = isBotanical ? "#0e1c09" : "#fff";
+  const sealFg    = event.style.sealTextColor?.trim() || sealFgDefault;
   const deskColor = isBotanical ? "#c9a96e" : theme.accent;
   const greenLeaf = isBotanical ? "#5a8f5e" : theme.primary;
 
@@ -450,33 +724,23 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
                   className="absolute inset-x-0"
                   style={{ top: 0, zIndex: 5 }}
                 >
-                  <GoldenRibbon color={envBorder} width={300} />
+                  <GoldenRibbon color={envBorder} width={300} style={event.style.ribbonStyle ?? "classic"} />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Wax seal */}
+            {/* Wax seal — SVG with realistic wax texture */}
             <AnimatePresence>
               {phase === "idle" && (
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                  className="absolute left-1/2 -translate-x-1/2 z-20 flex items-center justify-center rounded-full"
-                  style={{
-                    width: 48, height: 48, top: 82,
-                    backgroundColor: sealBg,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.35), inset 0 1px 3px rgba(255,255,255,0.15)",
-                  }}
+                  transition={{ delay: 0.4, type: "spring", stiffness: 180, damping: 14 }}
+                  className="absolute left-1/2 -translate-x-1/2 z-20"
+                  style={{ top: 79 }}
                 >
-                  {sealInitials ? (
-                    <span style={{ color: sealFg, fontFamily: "Great Vibes, cursive", fontSize: 18, lineHeight: 1 }}>
-                      {sealInitials}
-                    </span>
-                  ) : (
-                    <span style={{ color: sealFg, fontSize: 20, lineHeight: 1 }}>✦</span>
-                  )}
+                  <WaxSealSvg bg={sealBg} fg={sealFg} initials={sealInitials} size={60} />
                 </motion.div>
               )}
             </AnimatePresence>
