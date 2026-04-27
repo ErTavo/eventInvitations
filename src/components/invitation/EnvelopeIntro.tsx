@@ -196,6 +196,71 @@ function WaxSealSvg({ bg, fg, initials, size = 56 }: {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Seal crack overlay — SVG lines that appear when the seal starts to break
+// ─────────────────────────────────────────────────────────────────────────────
+
+function SealCracks({ size }: { size: number }) {
+  const c = size / 2;
+  const cracks = [
+    { d: `M${c},${c} L${c*0.15},${c*0.12}` },  // up-left
+    { d: `M${c},${c} L${c*1.85},${c*0.18}` },  // up-right
+    { d: `M${c},${c} L${c*0.08},${c*1.7}`  },  // left-down
+    { d: `M${c},${c} L${c*1.9},${c*1.85}`  },  // down-right
+    { d: `M${c},${c} L${c*1.0},${c*0.05}`  },  // straight up
+  ];
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+         className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+      {cracks.map((crack, i) => (
+        <motion.path
+          key={i}
+          d={crack.d}
+          stroke="rgba(0,0,0,0.75)"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+          fill="none"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={{ pathLength: 1, opacity: [0, 0.9, 0.6] }}
+          transition={{ duration: 0.22, delay: i * 0.04 }}
+        />
+      ))}
+    </svg>
+  );
+}
+
+// Wax fragments that fly apart when the seal breaks
+function SealFragments({ size, color }: { size: number; color: string }) {
+  const c = size / 2;
+  const fragments = [
+    { dx: -50, dy: -45, rotate: -140, scale: 0.4, clip: "polygon(0 0,55% 0,30% 55%,0 50%)"  },
+    { dx:  55, dy: -50, rotate:  120, scale: 0.35, clip: "polygon(45% 0,100% 0,100% 45%,60% 30%)" },
+    { dx: -48, dy:  50, rotate: -110, scale: 0.38, clip: "polygon(0 50%,35% 35%,20% 100%,0 100%)" },
+    { dx:  52, dy:  52, rotate:  130, scale: 0.33, clip: "polygon(60% 40%,100% 55%,100% 100%,50% 100%)" },
+  ];
+  return (
+    <>
+      {fragments.map((f, i) => (
+        <motion.div
+          key={i}
+          className="absolute pointer-events-none"
+          style={{ top: 0, left: 0, width: size, height: size, zIndex: 2 }}
+          initial={{ x: 0, y: 0, rotate: 0, opacity: 1, scale: 1 }}
+          animate={{ x: f.dx, y: f.dy, rotate: f.rotate, opacity: 0, scale: f.scale }}
+          transition={{ duration: 0.55, delay: 0.18 + i * 0.04, ease: [0.2, 0, 0.8, 1] }}
+        >
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}
+               style={{ clipPath: f.clip }}>
+            {/* Fragment has the full seal appearance */}
+            <circle cx={c} cy={c} r={c-1} fill={color} opacity="0.95"/>
+            <circle cx={c} cy={c} r={c-6} stroke="rgba(0,0,0,0.15)" strokeWidth="0.8" fill="none"/>
+          </svg>
+        </motion.div>
+      ))}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Ribbon designs — 6 styles, all sharing (color, width) props
 // SVG height and top offset vary per design.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -446,13 +511,14 @@ function DeskSurface({ color }: { color: string }) {
 export default function EnvelopeIntro({ event, participant, theme, onOpen }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
 
-  const isOpen   = phase === "opening" || phase === "rising" || phase === "done";
-  const isRising = phase === "rising"  || phase === "done";
+  const isOpen     = phase === "opening" || phase === "rising" || phase === "done";
+  const isRising   = phase === "rising"  || phase === "done";
+  const isBreaking = phase === "opening"; // seal & bow animating
 
   async function handleClick() {
     if (phase !== "idle") return;
     setPhase("opening");
-    await delay(700);
+    await delay(900); // extra time for break animations
     setPhase("rising");
     await delay(900);
     setPhase("done");
@@ -712,35 +778,58 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
                    }} />
             </motion.div>
 
-            {/* Golden ribbon — shown while idle, fades when opening */}
+            {/* Golden ribbon — idle: static; opening: bow snaps then stretches apart */}
             <AnimatePresence>
-              {phase === "idle" && (
+              {(phase === "idle" || phase === "opening") && (
                 <motion.div
                   key="ribbon"
                   initial={{ opacity: 0, scaleX: 0 }}
-                  animate={{ opacity: 1, scaleX: 1 }}
-                  exit={{ opacity: 0, transition: { duration: 0.25 } }}
-                  transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+                  animate={isBreaking
+                    ? {
+                        scaleX:  [1, 1.06, 1.06, 2.2],
+                        scaleY:  [1, 1.12, 0.15, 0],
+                        opacity: [1, 1,    1,    0],
+                      }
+                    : { opacity: 1, scaleX: 1, scaleY: 1 }
+                  }
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  transition={isBreaking
+                    ? { duration: 0.75, times: [0, 0.2, 0.5, 1], ease: "easeInOut" }
+                    : { delay: 0.5, duration: 0.5, ease: "easeOut" }
+                  }
                   className="absolute inset-x-0"
-                  style={{ top: 0, zIndex: 5 }}
+                  style={{ top: 0, zIndex: 5, transformOrigin: "center" }}
                 >
                   <GoldenRibbon color={envBorder} width={300} style={event.style.ribbonStyle ?? "classic"} />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Wax seal — SVG with realistic wax texture */}
+            {/* Wax seal — with crack + fragment break animation */}
             <AnimatePresence>
-              {phase === "idle" && (
+              {(phase === "idle" || phase === "opening") && (
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+                  animate={isBreaking
+                    ? { scale: [1, 1.18, 1.12, 0], opacity: [1, 1, 1, 0], rotate: [0, -6, 4, 0] }
+                    : { scale: 1, opacity: 1, rotate: 0 }
+                  }
                   exit={{ scale: 0, opacity: 0 }}
-                  transition={{ delay: 0.4, type: "spring", stiffness: 180, damping: 14 }}
+                  transition={isBreaking
+                    ? { duration: 0.7, times: [0, 0.25, 0.55, 1], ease: "easeInOut" }
+                    : { delay: 0.4, type: "spring", stiffness: 180, damping: 14 }
+                  }
                   className="absolute left-1/2 -translate-x-1/2 z-20"
                   style={{ top: 79 }}
                 >
-                  <WaxSealSvg bg={sealBg} fg={sealFg} initials={sealInitials} size={60} />
+                  {/* Relative container so cracks overlay the seal */}
+                  <div className="relative" style={{ width: 60, height: 60 }}>
+                    <WaxSealSvg bg={sealBg} fg={sealFg} initials={sealInitials} size={60} />
+                    {/* Crack lines appear on breaking */}
+                    {isBreaking && <SealCracks size={60} />}
+                    {/* Fragments fly apart */}
+                    {isBreaking && <SealFragments size={60} color={sealBg} />}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
