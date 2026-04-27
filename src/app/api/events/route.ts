@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createSsrClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,12 +14,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "name and date are required" }, { status: 400 });
   }
 
+  // Get current user to record created_by
+  const ssrClient = await createSsrClient();
+  const { data: { user } } = await ssrClient.auth.getUser();
+
   const supabase = adminClient();
   const slug = slugify(name) + "-" + Date.now().toString(36);
 
   const { data: event, error } = await supabase
     .from("events")
-    .insert({ name, date, location, description, cover_image, style, slug })
+    .insert({ name, date, location, description, cover_image, style, slug, created_by: user?.id ?? null })
     .select()
     .single();
 
