@@ -152,5 +152,26 @@ export const leavesTheme: ThemeConfig = {
 export function buildThemeConfig(style: EventStyle): ThemeConfig {
   if (style.theme === "leaves") return leavesTheme;
   if (style.theme === "custom") return buildCustomTheme(style);
-  return (themeConfig as Record<string, ThemeConfig>)[style.theme] ?? themeConfig.elegant;
+
+  const preset = (themeConfig as Record<string, ThemeConfig>)[style.theme] ?? themeConfig.elegant;
+
+  // If the user customized any color from the preset defaults, apply overrides
+  const primaryChanged   = style.primaryColor   && style.primaryColor   !== preset.primary;
+  const secondaryChanged = style.secondaryColor && style.secondaryColor !== preset.secondary;
+  const accentChanged    = style.accentColor    && style.accentColor    !== preset.accent;
+
+  if (!primaryChanged && !secondaryChanged && !accentChanged) return preset;
+
+  // Build a CSS-var based config so all color usages update,
+  // but preserve the original layoutVariant (e.g. "botanical" for elegant)
+  const customized = buildCustomTheme({
+    ...style,
+    theme: "custom",
+    primaryColor:   style.primaryColor   || preset.primary,
+    secondaryColor: style.secondaryColor || preset.secondary,
+    accentColor:    style.accentColor    || preset.accent,
+    textColor:      style.textColor      || "#2c2c2c",
+  });
+
+  return { ...customized, id: style.theme, layoutVariant: preset.layoutVariant };
 }

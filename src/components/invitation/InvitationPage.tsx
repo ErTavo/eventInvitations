@@ -115,6 +115,33 @@ export default function InvitationPage({ event, participant, modules, isPreview 
     }
   }, [isPreview, participant.id, participant.invitation_viewed]);
 
+  // Lock scroll while envelope is showing; scroll to top when it opens
+  useEffect(() => {
+    if (isPreview) return;
+    if (!opened) {
+      // Lock — also uses position:fixed so iOS Safari respects it
+      const scrollY = window.scrollY;
+      document.body.style.overflow  = "hidden";
+      document.body.style.position  = "fixed";
+      document.body.style.top       = `-${scrollY}px`;
+      document.body.style.width     = "100%";
+    } else {
+      // Unlock and jump to top
+      const scrollY = parseInt(document.body.style.top || "0") * -1;
+      document.body.style.overflow  = "";
+      document.body.style.position  = "";
+      document.body.style.top       = "";
+      document.body.style.width     = "";
+      window.scrollTo(0, scrollY > 0 ? 0 : 0);
+    }
+    return () => {
+      document.body.style.overflow  = "";
+      document.body.style.position  = "";
+      document.body.style.top       = "";
+      document.body.style.width     = "";
+    };
+  }, [opened, isPreview]);
+
   // Only return a module if it exists AND is active
   const getModule = (type: string) => modules.find((m) => m.type === type && m.is_active);
   const musicModule = getModule("music");

@@ -93,7 +93,9 @@ export default function EventSettingsTab({ event }: Props) {
   const [textColor,      setTextColor]      = useState(event.style.textColor      ?? "#2c2c2c");
   const [fontFamily,     setFontFamily]     = useState(event.style.fontFamily     ?? "Cormorant Garamond");
   const [sealInitials,   setSealInitials]   = useState(event.style.sealInitials   ?? "");
+  const [sealColor,      setSealColor]      = useState(event.style.sealColor      ?? "");
   const [sealTextColor,  setSealTextColor]  = useState(event.style.sealTextColor  ?? "");
+  const [ribbonColor,    setRibbonColor]    = useState(event.style.ribbonColor    ?? "");
   const [eventType,      setEventType]      = useState<EventType>(event.style.eventType ?? "general");
   const [person1Name,    setPerson1Name]    = useState(event.style.person1Name   ?? "");
   const [person2Name,    setPerson2Name]    = useState(event.style.person2Name   ?? "");
@@ -150,8 +152,10 @@ export default function EventSettingsTab({ event }: Props) {
       ...(person2Name.trim()  ? { person2Name:  person2Name.trim()  } : {}),
       ...(greetingText.trim() ? { greetingText: greetingText.trim() } : {}),
       ribbonStyle,
-      ...(showSeal && sealInitials.trim()   ? { sealInitials: sealInitials.trim().slice(0, 2) } : {}),
+      ...(showSeal && sealInitials.trim()   ? { sealInitials:  sealInitials.trim().slice(0, 2) } : {}),
+      ...(showSeal && sealColor.trim()     ? { sealColor:     sealColor.trim()     } : {}),
       ...(showSeal && sealTextColor.trim() ? { sealTextColor: sealTextColor.trim() } : {}),
+      ...(showSeal && ribbonColor.trim()   ? { ribbonColor:   ribbonColor.trim()   } : {}),
     };
     const res = await fetch(`/api/events/${event.id}`, {
       method: "PATCH",
@@ -299,55 +303,66 @@ export default function EventSettingsTab({ event }: Props) {
           {isCustom && <span className="ml-auto text-stone-800 text-xs font-medium">Activo</span>}
         </button>
 
-        {/* Wax seal initials — elegant and leaves templates */}
+        {/* Sobre: sello y moño — visible para elegant y leaves */}
         {showSeal && (
-          <div className="rounded border border-[#c9a96e] bg-[#f5f0e8] p-4 space-y-2">
-            <label className="block text-sm font-medium text-[#2d4a22]">
-              Iniciales del sello de cera
-            </label>
-            <p className="text-xs text-[#5a7a4a]">
-              Hasta 2 iniciales en cursiva sobre el sello dorado del sobre.
-            </p>
-            <div className="flex items-center gap-3">
-              <input
-                value={sealInitials}
-                onChange={(e) => setSealInitials(e.target.value.slice(0, 2))}
-                maxLength={2}
-                placeholder="AB"
-                className="w-20 border border-[#c9a96e] rounded px-3 py-2 text-sm text-center uppercase focus:outline-none focus:ring-1 focus:ring-[#2d4a22] bg-white tracking-widest"
-              />
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center shadow-md shrink-0"
-                style={{ backgroundColor: "#c9a96e", boxShadow: "0 2px 8px rgba(0,0,0,0.25)" }}
-              >
-                <span style={{ fontFamily: "Great Vibes, cursive", fontSize: 15, color: "#142209" }}>
-                  {sealInitials.trim().slice(0, 2) || "AB"}
-                </span>
+          <div className="rounded border border-stone-200 bg-stone-50 p-4 space-y-4">
+            <p className="text-sm font-medium text-stone-700">Sello de cera y moño</p>
+
+            {/* Seal initials + live preview */}
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-stone-600">Iniciales del sello (máx 2)</label>
+              <div className="flex items-center gap-3">
+                <input
+                  value={sealInitials}
+                  onChange={(e) => setSealInitials(e.target.value.slice(0, 2))}
+                  maxLength={2}
+                  placeholder="AB"
+                  className="w-20 border border-stone-300 rounded px-3 py-2 text-sm text-center uppercase focus:outline-none focus:ring-1 focus:ring-stone-500 bg-white tracking-widest"
+                />
+                {/* Live seal preview */}
+                <div className="w-11 h-11 rounded-full flex items-center justify-center shadow-md shrink-0"
+                     style={{ backgroundColor: sealColor || accentColor, boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>
+                  <span style={{ fontFamily: "Great Vibes, cursive", fontSize: 15, color: sealTextColor || "#fff" }}>
+                    {sealInitials.trim().slice(0, 2) || "AB"}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-400">Vista previa</p>
               </div>
-              <p className="text-xs text-stone-400">Vista previa</p>
             </div>
-            {/* Seal text color */}
-            <div className="flex items-center gap-3 pt-1">
-              <label className="text-xs font-medium text-stone-600 shrink-0">Color de las iniciales</label>
-              <input
-                type="color"
-                value={sealTextColor || (selectedTheme === "leaves" ? "#2c5f2e" : "#142209")}
-                onChange={(e) => setSealTextColor(e.target.value)}
-                className="w-8 h-8 rounded cursor-pointer border border-stone-200 p-0.5 bg-white"
-              />
-              <input
-                type="text"
-                value={sealTextColor}
-                onChange={(e) => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) setSealTextColor(e.target.value); }}
-                placeholder="Auto"
-                className="w-20 border border-stone-200 rounded px-2 py-1 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-stone-400"
-              />
-              {sealTextColor && (
-                <button type="button" onClick={() => setSealTextColor("")}
-                  className="text-xs text-stone-400 hover:text-stone-700 underline">
-                  Auto
-                </button>
-              )}
+
+            {/* Color pickers row */}
+            <div className="grid grid-cols-1 gap-3">
+              {([
+                { label: "Color del sello",    val: sealColor,     set: setSealColor,     placeholder: accentColor,  hint: "Fondo del sello de cera" },
+                { label: "Color de iniciales", val: sealTextColor, set: setSealTextColor, placeholder: "#ffffff",     hint: "Texto/iniciales sobre el sello" },
+                { label: "Color del moño",     val: ribbonColor,   set: setRibbonColor,   placeholder: accentColor,  hint: "Color del listón del sobre" },
+              ] as { label: string; val: string; set: (v: string) => void; placeholder: string; hint: string }[]).map((row) => (
+                <div key={row.label} className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={row.val || row.placeholder}
+                    onChange={(e) => row.set(e.target.value)}
+                    className="w-9 h-9 rounded cursor-pointer border border-stone-200 p-0.5 bg-white shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-stone-700 leading-none">{row.label}</p>
+                    <p className="text-xs text-stone-400 mt-0.5">{row.hint}</p>
+                  </div>
+                  <input
+                    type="text"
+                    value={row.val}
+                    onChange={(e) => { if (/^#[0-9a-fA-F]{0,6}$/.test(e.target.value)) row.set(e.target.value); }}
+                    placeholder="Auto"
+                    className="w-20 border border-stone-200 rounded px-2 py-1 text-xs font-mono text-right focus:outline-none focus:ring-1 focus:ring-stone-400"
+                  />
+                  {row.val && (
+                    <button type="button" onClick={() => row.set("")}
+                      className="text-xs text-stone-400 hover:text-stone-700 underline shrink-0">
+                      Auto
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

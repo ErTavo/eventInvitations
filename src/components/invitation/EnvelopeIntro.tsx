@@ -530,11 +530,14 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
 
   const screenBg  = isBotanical ? "#0e1c09" : theme.secondary;
   const envBody   = isBotanical ? "#2d4a22" : theme.secondary;
-  const envBorder = isBotanical ? "#c9a96e" : theme.accent;
   const cardBg    = isBotanical ? "#f5f0e8" : theme.secondary;
   const cardText  = isBotanical ? "#1e3314" : theme.primary;
   const hintColor = isBotanical ? "#c9a96e" : theme.primary;
-  const sealBg    = isBotanical ? "#c9a96e" : theme.primary;
+  // Colors — explicit overrides take priority, then theme-based defaults
+  const defaultSealBg  = isBotanical ? "#c9a96e" : theme.primary;
+  const defaultRibbon  = isBotanical ? "#c9a96e" : theme.accent;
+  const envBorder = event.style.ribbonColor?.trim() || defaultRibbon;
+  const sealBg    = event.style.sealColor?.trim()    || defaultSealBg;
   const sealFgDefault = isBotanical ? "#0e1c09" : "#fff";
   const sealFg    = event.style.sealTextColor?.trim() || sealFgDefault;
   const deskColor = isBotanical ? "#c9a96e" : theme.accent;

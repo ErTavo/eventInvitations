@@ -553,6 +553,29 @@ export default function LeavesInvitationPage({
 }: Props) {
   const [modal, setModal] = useState<string | null>(null);
 
+  // Lock scroll while envelope shows; release + scroll to top when opened
+  useEffect(() => {
+    if (isPreview) return;
+    if (!envelopeOpened) {
+      document.body.style.overflow  = "hidden";
+      document.body.style.position  = "fixed";
+      document.body.style.top       = "0";
+      document.body.style.width     = "100%";
+    } else {
+      document.body.style.overflow  = "";
+      document.body.style.position  = "";
+      document.body.style.top       = "";
+      document.body.style.width     = "";
+      window.scrollTo(0, 0);
+    }
+    return () => {
+      document.body.style.overflow  = "";
+      document.body.style.position  = "";
+      document.body.style.top       = "";
+      document.body.style.width     = "";
+    };
+  }, [envelopeOpened, isPreview]);
+
   const active = modules.filter((m) => m.is_active && m.type !== "music" && m.type !== "parents");
   const musicMod = modules.find((m) => m.type === "music" && m.is_active);
   const parentsMod = modules.find((m) => m.type === "parents" && m.is_active);

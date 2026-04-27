@@ -32,6 +32,8 @@ export interface EventStyle {
   backgroundImage?: string;
   sealInitials?: string;
   ribbonStyle?: "classic" | "crossed" | "minimal" | "floral" | "romantic" | "luxury";
+  ribbonColor?: string;  // overrides accent for the envelope ribbon
+  sealColor?: string;    // overrides primary for the wax seal background
   sealTextColor?: string;
   eventType?: EventType;
   person1Name?: string;
