@@ -10,7 +10,11 @@ export default function LoginPage() {
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const urlError = params.get("error");
+  const [error, setError] = useState(
+    urlError === "link_expired"   ? "El link de invitación ya expiró. Pide al admin que te envíe uno nuevo." :
+    urlError === "invalid_link"   ? "El link de invitación no es válido." : ""
+  );
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
