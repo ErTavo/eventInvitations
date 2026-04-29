@@ -19,9 +19,10 @@ function getTimeLeft(targetDate: string) {
 }
 
 export default function CountdownModule({ event, theme }: Props) {
-  const [time, setTime] = useState(getTimeLeft(event.date));
+  const [time, setTime] = useState<ReturnType<typeof getTimeLeft>>(null);
 
   useEffect(() => {
+    setTime(getTimeLeft(event.date));
     const id = setInterval(() => setTime(getTimeLeft(event.date)), 1000);
     return () => clearInterval(id);
   }, [event.date]);

@@ -407,10 +407,16 @@ export default function EventSettingsTab({ event }: Props) {
                     ) : r.id === "floral" ? (
                       <>
                         <rect x="0" y="18" width="40" height="4" fill={accentColor} opacity="0.6" rx="1"/>
-                        {[0,60,120,180,240,300].map((deg,i)=>(
-                          <ellipse key={i} cx={20+Math.cos(deg*Math.PI/180)*5} cy={20+Math.sin(deg*Math.PI/180)*5} rx="5" ry="3"
-                                   fill={accentColor} opacity={0.65-i*0.05} transform={`rotate(${deg} ${20+Math.cos(deg*Math.PI/180)*5} ${20+Math.sin(deg*Math.PI/180)*5})`}/>
-                        ))}
+                        {[0,60,120,180,240,300].map((deg,i)=>{
+                          const r4 = (n: number) => Math.round(n * 10000) / 10000;
+                          const px = r4(20 + Math.cos(deg * Math.PI / 180) * 5);
+                          const py = r4(20 + Math.sin(deg * Math.PI / 180) * 5);
+                          return (
+                            <ellipse key={i} cx={px} cy={py} rx="5" ry="3"
+                                     fill={accentColor} opacity={0.65-i*0.05}
+                                     transform={`rotate(${deg} ${px} ${py})`}/>
+                          );
+                        })}
                         <circle cx="20" cy="20" r="2.5" fill={accentColor} opacity="0.9"/>
                       </>
                     ) : r.id === "romantic" ? (

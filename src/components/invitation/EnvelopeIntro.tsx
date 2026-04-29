@@ -12,7 +12,7 @@ interface Props {
   onOpen: () => void;
 }
 
-type Phase = "idle" | "shaking" | "opening" | "rising" | "done";
+type Phase = "idle" | "shaking" | "opening" | "rising" | "revealing" | "done";
 
 function delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
@@ -429,16 +429,17 @@ function RibbonFloral({ color, width }: { color: string; width: number }) {
 
   function Rose({ x, y, r = 10 }: { x: number; y: number; r?: number }) {
     const petals5 = [0, 72, 144, 216, 288];
+    const n4 = (v: number) => Math.round(v * 10000) / 10000;
     return (
       <g>
         {/* Back petal layer — slightly larger, darker (shadow side) */}
         {petals5.map((deg, i) => {
           const rad = deg * Math.PI / 180;
-          const px = x + Math.cos(rad) * r * 0.56;
-          const py = y + Math.sin(rad) * r * 0.56;
+          const px = n4(x + Math.cos(rad) * r * 0.56);
+          const py = n4(y + Math.sin(rad) * r * 0.56);
           return (
             <ellipse key={`b${i}`}
-              cx={px} cy={py} rx={r*0.56} ry={r*0.34}
+              cx={px} cy={py} rx={n4(r*0.56)} ry={n4(r*0.34)}
               fill={color} opacity={0.60}
               transform={`rotate(${deg} ${px} ${py})`}/>
           );
@@ -446,11 +447,11 @@ function RibbonFloral({ color, width }: { color: string; width: number }) {
         {/* Shadow overlay on each back petal */}
         {petals5.map((deg, i) => {
           const rad = deg * Math.PI / 180;
-          const px = x + Math.cos(rad) * r * 0.60;
-          const py = y + Math.sin(rad) * r * 0.60;
+          const px = n4(x + Math.cos(rad) * r * 0.60);
+          const py = n4(y + Math.sin(rad) * r * 0.60);
           return (
             <ellipse key={`bs${i}`}
-              cx={px} cy={py} rx={r*0.30} ry={r*0.18}
+              cx={px} cy={py} rx={n4(r*0.30)} ry={n4(r*0.18)}
               fill="black" opacity="0.07"
               transform={`rotate(${deg+10} ${px} ${py})`}/>
           );
@@ -458,25 +459,29 @@ function RibbonFloral({ color, width }: { color: string; width: number }) {
         {/* Front petal layer — slightly offset inward, brighter */}
         {petals5.map((deg, i) => {
           const rad = (deg + 36) * Math.PI / 180;
-          const px = x + Math.cos(rad) * r * 0.30;
-          const py = y + Math.sin(rad) * r * 0.30;
+          const px = n4(x + Math.cos(rad) * r * 0.30);
+          const py = n4(y + Math.sin(rad) * r * 0.30);
           return (
             <ellipse key={`f${i}`}
-              cx={px} cy={py} rx={r*0.36} ry={r*0.22}
+              cx={px} cy={py} rx={n4(r*0.36)} ry={n4(r*0.22)}
               fill={color} opacity={0.88}
               transform={`rotate(${deg+36} ${px} ${py})`}/>
           );
         })}
         {/* Center disc */}
-        <circle cx={x} cy={y} r={r*0.22} fill={color} opacity="1"/>
+        <circle cx={x} cy={y} r={n4(r*0.22)} fill={color} opacity="1"/>
         {/* Center highlight */}
-        <circle cx={x - r*0.07} cy={y - r*0.07} r={r*0.10} fill="white" opacity="0.38"/>
+        <circle cx={n4(x - r*0.07)} cy={n4(y - r*0.07)} r={n4(r*0.10)} fill="white" opacity="0.38"/>
         {/* Outer petal edge highlight on topmost petal */}
-        <ellipse cx={x + Math.cos(-54*Math.PI/180)*r*0.56}
-                 cy={y + Math.sin(-54*Math.PI/180)*r*0.56}
-                 rx={r*0.20} ry={r*0.10}
-                 fill="white" opacity="0.22"
-                 transform={`rotate(-54 ${x + Math.cos(-54*Math.PI/180)*r*0.56} ${y + Math.sin(-54*Math.PI/180)*r*0.56})`}/>
+        {(() => {
+          const hx = n4(x + Math.cos(-54*Math.PI/180)*r*0.56);
+          const hy = n4(y + Math.sin(-54*Math.PI/180)*r*0.56);
+          return (
+            <ellipse cx={hx} cy={hy} rx={n4(r*0.20)} ry={n4(r*0.10)}
+                     fill="white" opacity="0.22"
+                     transform={`rotate(-54 ${hx} ${hy})`}/>
+          );
+        })()}
       </g>
     );
   }
@@ -747,21 +752,24 @@ function EnvelopeFolds({ width, height, color }: { width: number; height: number
 export default function EnvelopeIntro({ event, participant, theme, onOpen }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
 
-  const isShaking  = phase === "shaking";
-  const isOpen     = phase === "opening" || phase === "rising" || phase === "done";
-  const isRising   = phase === "rising"  || phase === "done";
-  const isBreaking = phase === "opening";
+  const isShaking   = phase === "shaking";
+  const isOpen      = phase === "opening" || phase === "rising" || phase === "revealing" || phase === "done";
+  const isRising    = phase === "rising"  || phase === "revealing" || phase === "done";
+  const isBreaking  = phase === "opening";
+  const isRevealing = phase === "revealing" || phase === "done";
 
   async function handleClick() {
     if (phase !== "idle") return;
     setPhase("shaking");
     await delay(480);
     setPhase("opening");
-    await delay(1000);
+    await delay(900);
     setPhase("rising");
+    await delay(700);
+    setPhase("revealing");
     await delay(900);
     setPhase("done");
-    await delay(500);
+    await delay(200);
     onOpen();
   }
 
@@ -769,7 +777,7 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
 
   const screenBg  = isBotanical ? "#0e1c09" : theme.secondary;
   const envBody   = isBotanical ? "#2d4a22" : theme.secondary;
-  const cardBg    = isBotanical ? "#f5f0e8" : theme.secondary;
+  const cardBg    = isBotanical ? "#f5f0e8" : "#fafaf8";
   const cardText  = isBotanical ? "#1e3314" : theme.primary;
   const hintColor = isBotanical ? "#c9a96e" : theme.primary;
   // Colors — explicit overrides take priority, then theme-based defaults
@@ -944,23 +952,35 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
             )}
           </AnimatePresence>
 
-          {/* ── ENVELOPE ── */}
+          {/* ── ENVELOPE + CARD wrapper — same 300×210 reference frame ── */}
+          <div className="relative" style={{ width: 300, height: 210 }}>
+
+          {/* Envelope — slides left on revealing */}
           <motion.div
-            className="relative z-10"
-            style={{ width: 300, height: 210, perspective: 800 }}
-            animate={isShaking ? {
-              x: [0, -8, 10, -10, 8, -6, 6, -4, 4, -2, 2, 0],
-              rotate: [0, -2, 2.5, -2.5, 2, -1.5, 1.5, -1, 1, -0.5, 0.5, 0],
-            } : {}}
-            transition={isShaking ? { duration: 0.50, ease: "easeInOut" } : {}}
+            className="absolute inset-0 z-10"
+            style={{ perspective: 800 }}
+            animate={
+              isRevealing ? { x: "-140%", opacity: 0, rotate: -12 } :
+              isShaking   ? {
+                x: [0, -8, 10, -10, 8, -6, 6, -4, 4, -2, 2, 0],
+                rotate: [0, -2, 2.5, -2.5, 2, -1.5, 1.5, -1, 1, -0.5, 0.5, 0],
+              } : {}
+            }
+            transition={
+              isRevealing ? { duration: 0.60, ease: [0.4, 0, 1, 1] } :
+              isShaking   ? { duration: 0.50, ease: "easeInOut" } :
+              {}
+            }
           >
 
-            {/* Body */}
+            {/* Body — z-index:1 creates own stacking context so fold-line children
+                 don't bleed into the same context as the card sibling */}
             <div
               className="absolute inset-0 rounded-b-md overflow-hidden"
               style={{
                 backgroundColor: envBody,
                 border: `1px solid ${envBorder}55`,
+                zIndex: 1,
                 boxShadow: `
                   0 2px 4px rgba(0,0,0,0.14),
                   0 8px 24px rgba(0,0,0,0.22),
@@ -1006,33 +1026,6 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
               )}
             </div>
 
-            {/* Rising card — with a gentle sway as it emerges */}
-            <motion.div
-              className="absolute left-4 right-4 rounded shadow-lg flex flex-col items-center justify-center gap-2 overflow-hidden pointer-events-none"
-              style={{ backgroundColor: cardBg, border: `1px solid ${envBorder}`, bottom: 12, height: 160 }}
-              initial={{ y: 0, opacity: 0, rotate: 0 }}
-              animate={isRising
-                ? { y: -130, opacity: 1, rotate: [0, 1.2, -0.8, 0.5, 0] }
-                : { y: 0, opacity: 0, rotate: 0 }
-              }
-              transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {isBotanical && (
-                <>
-                  <div className="absolute top-0 left-4 right-4 h-px" style={{ backgroundColor: envBorder, opacity: 0.4 }} />
-                  <div className="absolute bottom-0 left-4 right-4 h-px" style={{ backgroundColor: envBorder, opacity: 0.4 }} />
-                </>
-              )}
-              <p className="text-xs tracking-widest uppercase" style={{ color: cardText, opacity: 0.5 }}>Para</p>
-              <p className="text-2xl text-center px-4 leading-tight"
-                 style={{ color: cardText, fontFamily: "Great Vibes, cursive" }}>
-                {participant.name}
-              </p>
-              <div className="w-10 h-px" style={{ backgroundColor: envBorder }} />
-              <p className="text-xs tracking-widest text-center px-4" style={{ color: cardText, opacity: 0.5 }}>
-                {event.name}
-              </p>
-            </motion.div>
 
             {/* Flap */}
             <motion.div
@@ -1126,6 +1119,93 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
               )}
             </AnimatePresence>
           </motion.div>
+
+          {/* ── RISING CARD — sibling of envelope, guaranteed above all envelope contents ── */}
+          <motion.div
+            className="absolute left-4 right-4 rounded shadow-lg flex flex-col items-center justify-center gap-2 pointer-events-none"
+            style={{
+              backgroundColor: cardBg,
+              border: `1px solid ${envBorder}`,
+              bottom: 12,
+              height: 160,
+              zIndex: 30,
+            }}
+            initial={{ y: 0, opacity: 0, rotate: 0 }}
+            animate={
+              isRevealing ? { y: -130, opacity: 0 } :
+              isRising    ? { y: -130, opacity: 1, rotate: [0, 1.2, -0.8, 0.5, 0] } :
+                            { y: 0, opacity: 0, rotate: 0 }
+            }
+            transition={{ duration: isRevealing ? 0.20 : 0.75, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {isBotanical && (
+              <>
+                <div className="absolute top-0 left-4 right-4 h-px" style={{ backgroundColor: envBorder, opacity: 0.4 }} />
+                <div className="absolute bottom-0 left-4 right-4 h-px" style={{ backgroundColor: envBorder, opacity: 0.4 }} />
+              </>
+            )}
+            <p className="text-xs tracking-widest uppercase" style={{ color: cardText, opacity: 0.5 }}>Para</p>
+            <p className="text-2xl text-center px-4 leading-tight"
+               style={{ color: cardText, fontFamily: "Great Vibes, cursive" }}>
+              {participant.name}
+            </p>
+            <div className="w-10 h-px" style={{ backgroundColor: envBorder }} />
+            <p className="text-xs tracking-widest text-center px-4" style={{ color: cardText, opacity: 0.5 }}>
+              {event.name}
+            </p>
+          </motion.div>
+
+          </div>{/* end envelope+card wrapper */}
+
+          {/* ── REVEAL CARD — zoom toward viewer after envelope slides away ── */}
+          <AnimatePresence>
+            {isRevealing && (
+              <motion.div
+                key="reveal-card"
+                className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
+                style={{ zIndex: 50 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <motion.div
+                  className="flex flex-col items-center justify-center gap-4 rounded-xl overflow-hidden"
+                  style={{
+                    backgroundColor: cardBg,
+                    border: `1.5px solid ${envBorder}80`,
+                    width: "min(320px, 88vw)",
+                    padding: "36px 28px",
+                    boxShadow: `0 12px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.10)`,
+                    fontFamily: event.style.fontFamily || "Cormorant Garamond, serif",
+                  }}
+                  initial={{ scale: 0.65, y: 60, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{ duration: 0.80, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {/* Decorative top line */}
+                  <div style={{ width: 40, height: 1, backgroundColor: envBorder, opacity: 0.5 }} />
+
+                  <p className="text-xs tracking-widest uppercase" style={{ color: cardText, opacity: 0.5 }}>
+                    Para
+                  </p>
+                  <p className="text-3xl text-center leading-snug"
+                     style={{ color: cardText, fontFamily: "Great Vibes, cursive" }}>
+                    {participant.name}
+                  </p>
+
+                  <div style={{ width: 48, height: 1, backgroundColor: envBorder, opacity: 0.45 }} />
+
+                  <p className="text-xs tracking-widest uppercase text-center" style={{ color: cardText, opacity: 0.55 }}>
+                    {event.name}
+                  </p>
+
+                  {/* Decorative bottom line */}
+                  <div style={{ width: 40, height: 1, backgroundColor: envBorder, opacity: 0.5 }} />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ── BOTTOM HINT ── */}
           <AnimatePresence>
