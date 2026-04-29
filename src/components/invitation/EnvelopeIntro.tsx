@@ -267,71 +267,79 @@ function SealFragments({ size, color }: { size: number; color: string }) {
 
 type RibbonStyle = "classic" | "crossed" | "minimal" | "floral" | "romantic" | "luxury";
 
-// 1. CLASSIC — realistic bow: two fat loops with inner/outer surfaces, gathered knot, V-cut tails
+// 1. CLASSIC — realistic gift bow using clean 2-bezier loop geometry
 function RibbonClassic({ color, width }: { color: string; width: number }) {
-  const cx = width / 2;
-  const by = 46; const bh = 16; const bm = by + bh / 2;
+  const cx = width / 2;          // 150
+  const bt = 58; const bb = 73;  // band top / bottom  in SVG
+  const bm = (bt + bb) / 2;      // 65.5 — band mid
+
+  // Loop tips (outer extremes)
+  const LX = cx - 118;  // 32  — left tip x
+  const LY = 28;         // left tip y
+  const RX = cx + 118;  // 268 — right tip x
+  const RY = 28;         // right tip y
+
   return (
-    <svg width={width} height="132" viewBox={`0 0 ${width} 132`} fill="none"
-         className="absolute pointer-events-none" style={{ top: 50, left: 0, zIndex: 5 }}>
+    <svg width={width} height="148" viewBox={`0 0 ${width} 148`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 40, left: 0, zIndex: 5 }}>
 
-      {/* ── TAILS (behind loops) ── */}
-      {/* Left tail — tapered, V-cut end */}
-      <path d={`M${cx-16} ${bm+2} C${cx-26} 80 ${cx-50} 110 ${cx-36} 128 C${cx-30} 132 ${cx-24} 128 ${cx-20} 118 C${cx-14} 104 ${cx-12} 80 ${cx-12} ${bm+2}Z`}
+      {/* ── TAILS — V-cut, rendered behind loops ── */}
+      {/* Left tail: 12 px wide, curves left, ends in a V */}
+      <path d={`M${cx-16} ${bb} C${cx-22} 96 ${cx-38} 124 ${cx-26} 144 C${cx-20} 148 ${cx-12} 148 ${cx-8} 140 C${cx-4} 130 ${cx-4} 96 ${cx-4} ${bb}Z`}
             fill={color} opacity="0.82"/>
-      <path d={`M${cx-15} ${bm+4} C${cx-24} 82 ${cx-46} 108 ${cx-34} 126`}
-            stroke="white" strokeWidth="1.5" opacity="0.20" fill="none" strokeLinecap="round"/>
-      <path d={`M${cx-12} ${bm+4} C${cx-13} 80 ${cx-18} 102 ${cx-22} 116`}
-            stroke="black" strokeWidth="3" opacity="0.08" fill="none" strokeLinecap="round"/>
+      <path d={`M${cx-15} ${bb+2} C${cx-20} 98 ${cx-34} 122 ${cx-24} 142`}
+            stroke="white" strokeWidth="1.5" opacity="0.18" fill="none" strokeLinecap="round"/>
       {/* Right tail */}
-      <path d={`M${cx+12} ${bm+2} C${cx+12} 80 ${cx+14} 104 ${cx+20} 118 C${cx+24} 128 ${cx+30} 132 ${cx+36} 128 C${cx+50} 110 ${cx+26} 80 ${cx+16} ${bm+2}Z`}
+      <path d={`M${cx+4} ${bb} C${cx+4} 96 ${cx+4} 130 ${cx+8} 140 C${cx+12} 148 ${cx+20} 148 ${cx+26} 144 C${cx+38} 124 ${cx+22} 96 ${cx+16} ${bb}Z`}
             fill={color} opacity="0.82"/>
-      <path d={`M${cx+15} ${bm+4} C${cx+24} 82 ${cx+46} 108 ${cx+34} 126`}
-            stroke="white" strokeWidth="1.5" opacity="0.20" fill="none" strokeLinecap="round"/>
-      <path d={`M${cx+12} ${bm+4} C${cx+13} 80 ${cx+18} 102 ${cx+22} 116`}
-            stroke="black" strokeWidth="3" opacity="0.08" fill="none" strokeLinecap="round"/>
+      <path d={`M${cx+15} ${bb+2} C${cx+20} 98 ${cx+34} 122 ${cx+24} 142`}
+            stroke="white" strokeWidth="1.5" opacity="0.18" fill="none" strokeLinecap="round"/>
 
-      {/* ── LEFT LOOP outer face ── */}
-      <path d={`M${cx-14} ${bm-4} C${cx-18} 24 ${cx-62} 2 ${cx-100} 6 C${cx-132} 10 ${cx-142} 42 ${cx-122} 58 C${cx-106} 70 ${cx-50} 72 ${cx-14} ${bm+4}Z`}
+      {/* ── LEFT LOOP ──
+           Two cubic beziers: top arc sweeps up-left to LX,LY then bottom arc returns.
+           This produces a clean, symmetrical rounded bow loop. ── */}
+      <path d={`M${cx-20} ${bt} C${cx-40} 10 ${cx-96} 4 ${LX} ${LY} C${cx-132} 46 ${cx-88} 78 ${cx-20} ${bb}Z`}
             fill={color} opacity="0.87"/>
-      {/* Left loop inner shadow — dark stroke on concave inside */}
-      <path d={`M${cx-14} ${bm-2} C${cx-20} 30 ${cx-56} 10 ${cx-92} 14 C${cx-120} 18 ${cx-130} 44 ${cx-116} 57`}
-            stroke="black" strokeWidth="16" strokeLinecap="round" opacity="0.09" fill="none"/>
-      {/* Left loop outer highlight (where light hits the outer curve) */}
-      <path d={`M${cx-22} 28 C${cx-44} 6 ${cx-80} 2 ${cx-112} 6`}
-            stroke="white" strokeWidth="2.5" opacity="0.30" strokeLinecap="round" fill="none"/>
-      <path d={`M${cx-20} 38 C${cx-48} 18 ${cx-84} 8 ${cx-116} 12`}
-            stroke="white" strokeWidth="1.0" opacity="0.14" strokeLinecap="round" fill="none"/>
+      {/* Inner shadow — inset concave fill simulating the inside of the loop */}
+      <path d={`M${cx-20} ${bt+4} C${cx-42} 18 ${cx-90} 12 ${LX+10} ${LY+6} C${cx-118} 50 ${cx-82} 74 ${cx-20} ${bb-4}Z`}
+            fill="black" opacity="0.11"/>
+      {/* Outer highlight along the top arc */}
+      <path d={`M${cx-42} 14 C${cx-72} 4 ${cx-104} 8 ${cx-122} ${LY}`}
+            stroke="white" strokeWidth="3" opacity="0.28" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx-38} 24 C${cx-66} 14 ${cx-98} 14 ${cx-118} 32`}
+            stroke="white" strokeWidth="1.2" opacity="0.14" strokeLinecap="round" fill="none"/>
+      {/* Bottom-inner edge crease shadow */}
+      <path d={`M${cx-20} ${bt+6} C${cx-42} 22 ${cx-86} 14 ${LX+12} ${LY+10}`}
+            stroke="black" strokeWidth="2" opacity="0.08" fill="none"/>
 
-      {/* ── RIGHT LOOP outer face ── */}
-      <path d={`M${cx+14} ${bm-4} C${cx+18} 24 ${cx+62} 2 ${cx+100} 6 C${cx+132} 10 ${cx+142} 42 ${cx+122} 58 C${cx+106} 70 ${cx+50} 72 ${cx+14} ${bm+4}Z`}
+      {/* ── RIGHT LOOP — exact mirror ── */}
+      <path d={`M${cx+20} ${bt} C${cx+40} 10 ${cx+96} 4 ${RX} ${RY} C${cx+132} 46 ${cx+88} 78 ${cx+20} ${bb}Z`}
             fill={color} opacity="0.87"/>
-      {/* Right loop inner shadow */}
-      <path d={`M${cx+14} ${bm-2} C${cx+20} 30 ${cx+56} 10 ${cx+92} 14 C${cx+120} 18 ${cx+130} 44 ${cx+116} 57`}
-            stroke="black" strokeWidth="16" strokeLinecap="round" opacity="0.09" fill="none"/>
-      {/* Right loop outer highlight */}
-      <path d={`M${cx+22} 28 C${cx+44} 6 ${cx+80} 2 ${cx+112} 6`}
-            stroke="white" strokeWidth="2.5" opacity="0.30" strokeLinecap="round" fill="none"/>
-      <path d={`M${cx+20} 38 C${cx+48} 18 ${cx+84} 8 ${cx+116} 12`}
-            stroke="white" strokeWidth="1.0" opacity="0.14" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx+20} ${bt+4} C${cx+42} 18 ${cx+90} 12 ${RX-10} ${RY+6} C${cx+118} 50 ${cx+82} 74 ${cx+20} ${bb-4}Z`}
+            fill="black" opacity="0.11"/>
+      <path d={`M${cx+42} 14 C${cx+72} 4 ${cx+104} 8 ${cx+122} ${RY}`}
+            stroke="white" strokeWidth="3" opacity="0.28" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx+38} 24 C${cx+66} 14 ${cx+98} 14 ${cx+118} 32`}
+            stroke="white" strokeWidth="1.2" opacity="0.14" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx+20} ${bt+6} C${cx+42} 22 ${cx+86} 14 ${RX-12} ${RY+10}`}
+            stroke="black" strokeWidth="2" opacity="0.08" fill="none"/>
 
       {/* ── HORIZONTAL BAND ── */}
-      <rect x="0" y={by} width={width} height={bh} fill={color} opacity="0.84" rx="1"/>
-      <rect x="0" y={by} width={width} height="5"  fill="white" opacity="0.24" rx="1"/>
-      <rect x="0" y={by+bh-4} width={width} height="4" fill="black" opacity="0.07"/>
+      <rect x="0" y={bt} width={width} height={bb-bt} fill={color} opacity="0.85" rx="1"/>
+      <rect x="0" y={bt}   width={width} height="5" fill="white" opacity="0.25" rx="1"/>
+      <rect x="0" y={bb-4} width={width} height="4" fill="black" opacity="0.07"/>
 
-      {/* ── CENTER KNOT — gathered fabric look ── */}
-      <ellipse cx={cx} cy={bm} rx="22" ry="17" fill={color} opacity="0.96"/>
-      {/* Pinch shadow at the gather point */}
-      <line x1={cx} y1={bm-12} x2={cx} y2={bm+12}
-            stroke="black" strokeWidth="6" opacity="0.10" strokeLinecap="round"/>
-      {/* Fabric wrinkle lines radiating from pinch */}
-      <path d={`M${cx-5} ${bm-10} Q${cx} ${bm} ${cx-5} ${bm+10}`} stroke="black" strokeWidth="0.9" opacity="0.14" fill="none"/>
-      <path d={`M${cx+5} ${bm-10} Q${cx} ${bm} ${cx+5} ${bm+10}`} stroke="black" strokeWidth="0.9" opacity="0.12" fill="none"/>
-      <path d={`M${cx-9} ${bm-7}  Q${cx-3} ${bm} ${cx-9} ${bm+7}`}  stroke="black" strokeWidth="0.6" opacity="0.08" fill="none"/>
-      <path d={`M${cx+9} ${bm-7}  Q${cx+3} ${bm} ${cx+9} ${bm+7}`}  stroke="black" strokeWidth="0.6" opacity="0.07" fill="none"/>
-      {/* Knot highlight (light from top-left) */}
-      <ellipse cx={cx-5} cy={bm-4} rx="9" ry="5" fill="white" opacity="0.28"/>
+      {/* ── CENTER KNOT — wrapped-ribbon with pinch gather marks ── */}
+      <ellipse cx={cx} cy={bm} rx="22" ry="9" fill={color} opacity="0.97"/>
+      {/* Central pinch shadow (vertical compression) */}
+      <ellipse cx={cx} cy={bm} rx="5" ry="8" fill="black" opacity="0.13"/>
+      {/* Gather wrinkle lines */}
+      <path d={`M${cx-8}  ${bt+2} Q${cx-12} ${bm} ${cx-8}  ${bb-2}`} stroke="black" strokeWidth="1.0" opacity="0.16" fill="none"/>
+      <path d={`M${cx+8}  ${bt+2} Q${cx+12} ${bm} ${cx+8}  ${bb-2}`} stroke="black" strokeWidth="1.0" opacity="0.14" fill="none"/>
+      <path d={`M${cx-16} ${bt+3} Q${cx-19} ${bm} ${cx-16} ${bb-3}`} stroke="black" strokeWidth="0.7" opacity="0.09" fill="none"/>
+      <path d={`M${cx+16} ${bt+3} Q${cx+19} ${bm} ${cx+16} ${bb-3}`} stroke="black" strokeWidth="0.7" opacity="0.08" fill="none"/>
+      {/* Knot highlight (light from upper-left) */}
+      <ellipse cx={cx-6} cy={bm-3} rx="10" ry="4.5" fill="white" opacity="0.26"/>
     </svg>
   );
 }
