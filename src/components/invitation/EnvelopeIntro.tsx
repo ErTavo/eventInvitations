@@ -12,7 +12,7 @@ interface Props {
   onOpen: () => void;
 }
 
-type Phase = "idle" | "opening" | "rising" | "done";
+type Phase = "idle" | "shaking" | "opening" | "rising" | "done";
 
 function delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
@@ -267,44 +267,124 @@ function SealFragments({ size, color }: { size: number; color: string }) {
 
 type RibbonStyle = "classic" | "crossed" | "minimal" | "floral" | "romantic" | "luxury";
 
-// 1. CLASSIC — big bow with two loops and falling tails
+// 1. CLASSIC — realistic bow: two fat loops with inner/outer surfaces, gathered knot, V-cut tails
 function RibbonClassic({ color, width }: { color: string; width: number }) {
   const cx = width / 2;
+  const by = 46; const bh = 16; const bm = by + bh / 2;
   return (
-    <svg width={width} height="110" viewBox={`0 0 ${width} 110`} fill="none"
-         className="absolute pointer-events-none" style={{ top: 60, left: 0, zIndex: 5 }}>
-      <rect x="0" y="40" width={width} height="16" fill={color} opacity="0.72" rx="1"/>
-      <rect x="0" y="40" width={width} height="5"  fill="white" opacity="0.22" rx="1"/>
-      <rect x="0" y="52" width={width} height="4"  fill="black" opacity="0.07"/>
-      <path d={`M${cx-16} 48 C${cx-60} 6 ${cx-110} 2 ${cx-90} 34 C${cx-80} 56 ${cx-40} 60 ${cx-16} 48Z`} fill={color} opacity="0.78"/>
-      <path d={`M${cx-16} 48 C${cx-56} 10 ${cx-104} 8 ${cx-88} 36`} stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
-      <path d={`M${cx+16} 48 C${cx+60} 6 ${cx+110} 2 ${cx+90} 34 C${cx+80} 56 ${cx+40} 60 ${cx+16} 48Z`} fill={color} opacity="0.78"/>
-      <path d={`M${cx+16} 48 C${cx+56} 10 ${cx+104} 8 ${cx+88} 36`} stroke="white" strokeWidth="1" opacity="0.2" fill="none"/>
-      <ellipse cx={cx} cy="48" rx="18" ry="14" fill={color} opacity="0.9"/>
-      <ellipse cx={cx} cy="48" rx="10" ry="8"  fill={color} opacity="1"/>
-      <ellipse cx={cx-4} cy="45" rx="5" ry="3" fill="white" opacity="0.3"/>
-      <path d={`M${cx-12} 56 C${cx-38} 76 ${cx-66} 98 ${cx-52} 110`} stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
-      <path d={`M${cx+12} 56 C${cx+38} 76 ${cx+66} 98 ${cx+52} 110`} stroke={color} strokeWidth="14" strokeLinecap="round" opacity="0.75"/>
+    <svg width={width} height="132" viewBox={`0 0 ${width} 132`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 50, left: 0, zIndex: 5 }}>
+
+      {/* ── TAILS (behind loops) ── */}
+      {/* Left tail — tapered, V-cut end */}
+      <path d={`M${cx-16} ${bm+2} C${cx-26} 80 ${cx-50} 110 ${cx-36} 128 C${cx-30} 132 ${cx-24} 128 ${cx-20} 118 C${cx-14} 104 ${cx-12} 80 ${cx-12} ${bm+2}Z`}
+            fill={color} opacity="0.82"/>
+      <path d={`M${cx-15} ${bm+4} C${cx-24} 82 ${cx-46} 108 ${cx-34} 126`}
+            stroke="white" strokeWidth="1.5" opacity="0.20" fill="none" strokeLinecap="round"/>
+      <path d={`M${cx-12} ${bm+4} C${cx-13} 80 ${cx-18} 102 ${cx-22} 116`}
+            stroke="black" strokeWidth="3" opacity="0.08" fill="none" strokeLinecap="round"/>
+      {/* Right tail */}
+      <path d={`M${cx+12} ${bm+2} C${cx+12} 80 ${cx+14} 104 ${cx+20} 118 C${cx+24} 128 ${cx+30} 132 ${cx+36} 128 C${cx+50} 110 ${cx+26} 80 ${cx+16} ${bm+2}Z`}
+            fill={color} opacity="0.82"/>
+      <path d={`M${cx+15} ${bm+4} C${cx+24} 82 ${cx+46} 108 ${cx+34} 126`}
+            stroke="white" strokeWidth="1.5" opacity="0.20" fill="none" strokeLinecap="round"/>
+      <path d={`M${cx+12} ${bm+4} C${cx+13} 80 ${cx+18} 102 ${cx+22} 116`}
+            stroke="black" strokeWidth="3" opacity="0.08" fill="none" strokeLinecap="round"/>
+
+      {/* ── LEFT LOOP outer face ── */}
+      <path d={`M${cx-14} ${bm-4} C${cx-18} 24 ${cx-62} 2 ${cx-100} 6 C${cx-132} 10 ${cx-142} 42 ${cx-122} 58 C${cx-106} 70 ${cx-50} 72 ${cx-14} ${bm+4}Z`}
+            fill={color} opacity="0.87"/>
+      {/* Left loop inner shadow — dark stroke on concave inside */}
+      <path d={`M${cx-14} ${bm-2} C${cx-20} 30 ${cx-56} 10 ${cx-92} 14 C${cx-120} 18 ${cx-130} 44 ${cx-116} 57`}
+            stroke="black" strokeWidth="16" strokeLinecap="round" opacity="0.09" fill="none"/>
+      {/* Left loop outer highlight (where light hits the outer curve) */}
+      <path d={`M${cx-22} 28 C${cx-44} 6 ${cx-80} 2 ${cx-112} 6`}
+            stroke="white" strokeWidth="2.5" opacity="0.30" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx-20} 38 C${cx-48} 18 ${cx-84} 8 ${cx-116} 12`}
+            stroke="white" strokeWidth="1.0" opacity="0.14" strokeLinecap="round" fill="none"/>
+
+      {/* ── RIGHT LOOP outer face ── */}
+      <path d={`M${cx+14} ${bm-4} C${cx+18} 24 ${cx+62} 2 ${cx+100} 6 C${cx+132} 10 ${cx+142} 42 ${cx+122} 58 C${cx+106} 70 ${cx+50} 72 ${cx+14} ${bm+4}Z`}
+            fill={color} opacity="0.87"/>
+      {/* Right loop inner shadow */}
+      <path d={`M${cx+14} ${bm-2} C${cx+20} 30 ${cx+56} 10 ${cx+92} 14 C${cx+120} 18 ${cx+130} 44 ${cx+116} 57`}
+            stroke="black" strokeWidth="16" strokeLinecap="round" opacity="0.09" fill="none"/>
+      {/* Right loop outer highlight */}
+      <path d={`M${cx+22} 28 C${cx+44} 6 ${cx+80} 2 ${cx+112} 6`}
+            stroke="white" strokeWidth="2.5" opacity="0.30" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx+20} 38 C${cx+48} 18 ${cx+84} 8 ${cx+116} 12`}
+            stroke="white" strokeWidth="1.0" opacity="0.14" strokeLinecap="round" fill="none"/>
+
+      {/* ── HORIZONTAL BAND ── */}
+      <rect x="0" y={by} width={width} height={bh} fill={color} opacity="0.84" rx="1"/>
+      <rect x="0" y={by} width={width} height="5"  fill="white" opacity="0.24" rx="1"/>
+      <rect x="0" y={by+bh-4} width={width} height="4" fill="black" opacity="0.07"/>
+
+      {/* ── CENTER KNOT — gathered fabric look ── */}
+      <ellipse cx={cx} cy={bm} rx="22" ry="17" fill={color} opacity="0.96"/>
+      {/* Pinch shadow at the gather point */}
+      <line x1={cx} y1={bm-12} x2={cx} y2={bm+12}
+            stroke="black" strokeWidth="6" opacity="0.10" strokeLinecap="round"/>
+      {/* Fabric wrinkle lines radiating from pinch */}
+      <path d={`M${cx-5} ${bm-10} Q${cx} ${bm} ${cx-5} ${bm+10}`} stroke="black" strokeWidth="0.9" opacity="0.14" fill="none"/>
+      <path d={`M${cx+5} ${bm-10} Q${cx} ${bm} ${cx+5} ${bm+10}`} stroke="black" strokeWidth="0.9" opacity="0.12" fill="none"/>
+      <path d={`M${cx-9} ${bm-7}  Q${cx-3} ${bm} ${cx-9} ${bm+7}`}  stroke="black" strokeWidth="0.6" opacity="0.08" fill="none"/>
+      <path d={`M${cx+9} ${bm-7}  Q${cx+3} ${bm} ${cx+9} ${bm+7}`}  stroke="black" strokeWidth="0.6" opacity="0.07" fill="none"/>
+      {/* Knot highlight (light from top-left) */}
+      <ellipse cx={cx-5} cy={bm-4} rx="9" ry="5" fill="white" opacity="0.28"/>
     </svg>
   );
 }
 
-// 2. CROSSED — two diagonal ribbons forming an X with a round knot at center
+// 2. CROSSED — two diagonal ribbons with satin sheen, crossing depth, gathered knot
 function RibbonCrossed({ color, width }: { color: string; width: number }) {
-  const cx = width / 2; const h = 210;
+  const cx = width / 2; const h = 210; const cy = h / 2;
   return (
     <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`} fill="none"
          className="absolute pointer-events-none" style={{ top: 0, left: 0, zIndex: 5 }}>
-      {/* Diagonal band top-left → bottom-right */}
-      <path d={`M-10 0 L${width * 0.35} ${h} L${width * 0.45} ${h} L10 0Z`} fill={color} opacity="0.55"/>
-      <path d={`M2 0 L${width * 0.37} ${h}`} stroke="white" strokeWidth="1.5" opacity="0.2"/>
-      {/* Diagonal band top-right → bottom-left */}
-      <path d={`M${width+10} 0 L${width * 0.65} ${h} L${width * 0.55} ${h} L${width-10} 0Z`} fill={color} opacity="0.55"/>
-      <path d={`M${width-2} 0 L${width * 0.63} ${h}`} stroke="white" strokeWidth="1.5" opacity="0.2"/>
-      {/* Center knot */}
-      <ellipse cx={cx} cy={h/2} rx="16" ry="16" fill={color} opacity="0.95"/>
-      <ellipse cx={cx} cy={h/2} rx="9"  ry="9"  fill={color} opacity="1"/>
-      <ellipse cx={cx-3} cy={h/2-3} rx="4" ry="2.5" fill="white" opacity="0.35"/>
+
+      {/* ── BAND 1: top-left → bottom-right (underneath) ── */}
+      <path d={`M-10 0 L${width*0.38} ${h} L${width*0.48} ${h} L10 0Z`}
+            fill={color} opacity="0.68"/>
+      {/* Band 1 left-edge highlight (top surface catches light) */}
+      <path d={`M-8 0 L${width*0.40} ${h}`}
+            stroke="white" strokeWidth="3" opacity="0.22" strokeLinecap="round"/>
+      {/* Band 1 center satin sheen */}
+      <path d={`M0 0 L${width*0.43} ${h}`}
+            stroke="white" strokeWidth="6" opacity="0.07"/>
+      {/* Band 1 right-edge shadow */}
+      <path d={`M8 0 L${width*0.47} ${h}`}
+            stroke="black" strokeWidth="2" opacity="0.10"/>
+
+      {/* ── BAND 2: top-right → bottom-left (on top) ── */}
+      <path d={`M${width+10} 0 L${width*0.62} ${h} L${width*0.52} ${h} L${width-10} 0Z`}
+            fill={color} opacity="0.68"/>
+      {/* Band 2 left-edge highlight */}
+      <path d={`M${width+8} 0 L${width*0.60} ${h}`}
+            stroke="white" strokeWidth="3" opacity="0.22" strokeLinecap="round"/>
+      {/* Band 2 center satin sheen */}
+      <path d={`M${width} 0 L${width*0.57} ${h}`}
+            stroke="white" strokeWidth="6" opacity="0.07"/>
+      {/* Band 2 right-edge shadow */}
+      <path d={`M${width-8} 0 L${width*0.54} ${h}`}
+            stroke="black" strokeWidth="2" opacity="0.10"/>
+
+      {/* ── Depth shadow at crossing — band 2 casts shadow on band 1 ── */}
+      <ellipse cx={cx} cy={cy} rx="28" ry="22"
+               fill="black" opacity="0.08" transform={`rotate(-34, ${cx}, ${cy})`}/>
+
+      {/* ── CENTER KNOT — gathered ribbon at cross ── */}
+      <ellipse cx={cx} cy={cy} rx="20" ry="15" fill={color} opacity="0.96"/>
+      {/* Pinch shadow */}
+      <line x1={cx} y1={cy-10} x2={cx} y2={cy+10}
+            stroke="black" strokeWidth="6" opacity="0.10" strokeLinecap="round"/>
+      {/* Fabric fold lines */}
+      <path d={`M${cx-5} ${cy-9}  Q${cx}   ${cy} ${cx-5} ${cy+9}`}  stroke="black" strokeWidth="0.9" opacity="0.14" fill="none"/>
+      <path d={`M${cx+5} ${cy-9}  Q${cx}   ${cy} ${cx+5} ${cy+9}`}  stroke="black" strokeWidth="0.9" opacity="0.12" fill="none"/>
+      <path d={`M${cx-9} ${cy-6}  Q${cx-3} ${cy} ${cx-9} ${cy+6}`}  stroke="black" strokeWidth="0.6" opacity="0.08" fill="none"/>
+      <path d={`M${cx+9} ${cy-6}  Q${cx+3} ${cy} ${cx+9} ${cy+6}`}  stroke="black" strokeWidth="0.6" opacity="0.07" fill="none"/>
+      {/* Knot highlight */}
+      <ellipse cx={cx-5} cy={cy-4} rx="8" ry="5" fill="white" opacity="0.30"/>
     </svg>
   );
 }
@@ -335,145 +415,269 @@ function RibbonMinimal({ color, width }: { color: string; width: number }) {
   );
 }
 
-// 4. FLORAL — ribbon band with rose/flower clusters at center and sides
+// 4. FLORAL — satin band with layered roses (petal depth via multiple ellipse passes)
 function RibbonFloral({ color, width }: { color: string; width: number }) {
   const cx = width / 2;
+
   function Rose({ x, y, r = 10 }: { x: number; y: number; r?: number }) {
+    const petals5 = [0, 72, 144, 216, 288];
     return (
       <g>
-        {[0,60,120,180,240,300].map((deg, i) => (
-          <ellipse key={i} cx={x + Math.cos(deg*Math.PI/180)*r*0.55} cy={y + Math.sin(deg*Math.PI/180)*r*0.55}
-                   rx={r*0.55} ry={r*0.35} fill={color} opacity={0.7 - i*0.05}
-                   transform={`rotate(${deg} ${x + Math.cos(deg*Math.PI/180)*r*0.55} ${y + Math.sin(deg*Math.PI/180)*r*0.55})`}/>
-        ))}
-        <circle cx={x} cy={y} r={r*0.28} fill={color} opacity="0.95"/>
-        <circle cx={x-r*0.08} cy={y-r*0.08} r={r*0.12} fill="white" opacity="0.4"/>
+        {/* Back petal layer — slightly larger, darker (shadow side) */}
+        {petals5.map((deg, i) => {
+          const rad = deg * Math.PI / 180;
+          const px = x + Math.cos(rad) * r * 0.56;
+          const py = y + Math.sin(rad) * r * 0.56;
+          return (
+            <ellipse key={`b${i}`}
+              cx={px} cy={py} rx={r*0.56} ry={r*0.34}
+              fill={color} opacity={0.60}
+              transform={`rotate(${deg} ${px} ${py})`}/>
+          );
+        })}
+        {/* Shadow overlay on each back petal */}
+        {petals5.map((deg, i) => {
+          const rad = deg * Math.PI / 180;
+          const px = x + Math.cos(rad) * r * 0.60;
+          const py = y + Math.sin(rad) * r * 0.60;
+          return (
+            <ellipse key={`bs${i}`}
+              cx={px} cy={py} rx={r*0.30} ry={r*0.18}
+              fill="black" opacity="0.07"
+              transform={`rotate(${deg+10} ${px} ${py})`}/>
+          );
+        })}
+        {/* Front petal layer — slightly offset inward, brighter */}
+        {petals5.map((deg, i) => {
+          const rad = (deg + 36) * Math.PI / 180;
+          const px = x + Math.cos(rad) * r * 0.30;
+          const py = y + Math.sin(rad) * r * 0.30;
+          return (
+            <ellipse key={`f${i}`}
+              cx={px} cy={py} rx={r*0.36} ry={r*0.22}
+              fill={color} opacity={0.88}
+              transform={`rotate(${deg+36} ${px} ${py})`}/>
+          );
+        })}
+        {/* Center disc */}
+        <circle cx={x} cy={y} r={r*0.22} fill={color} opacity="1"/>
+        {/* Center highlight */}
+        <circle cx={x - r*0.07} cy={y - r*0.07} r={r*0.10} fill="white" opacity="0.38"/>
+        {/* Outer petal edge highlight on topmost petal */}
+        <ellipse cx={x + Math.cos(-54*Math.PI/180)*r*0.56}
+                 cy={y + Math.sin(-54*Math.PI/180)*r*0.56}
+                 rx={r*0.20} ry={r*0.10}
+                 fill="white" opacity="0.22"
+                 transform={`rotate(-54 ${x + Math.cos(-54*Math.PI/180)*r*0.56} ${y + Math.sin(-54*Math.PI/180)*r*0.56})`}/>
       </g>
     );
   }
+
   return (
-    <svg width={width} height="80" viewBox={`0 0 ${width} 80`} fill="none"
-         className="absolute pointer-events-none" style={{ top: 65, left: 0, zIndex: 5 }}>
-      <rect x="0" y="36" width={width} height="12" fill={color} opacity="0.6" rx="1"/>
-      <rect x="0" y="36" width={width} height="4"  fill="white" opacity="0.2" rx="1"/>
-      {/* Left leaf sprigs */}
-      <path d={`M${cx-55} 42 C${cx-70} 30 ${cx-80} 28 ${cx-72} 36`} stroke={color} strokeWidth="1.5" opacity="0.5" fill="none"/>
-      <ellipse cx={cx-74} cy="30" rx="8" ry="4.5" fill={color} opacity="0.42" transform={`rotate(-40 ${cx-74} 30)`}/>
-      <path d={`M${cx-55} 42 C${cx-68} 52 ${cx-78} 54 ${cx-70} 46`} stroke={color} strokeWidth="1.5" opacity="0.45" fill="none"/>
-      <ellipse cx={cx-72} cy="52" rx="7" ry="4" fill={color} opacity="0.38" transform={`rotate(35 ${cx-72} 52)`}/>
-      {/* Right leaf sprigs (mirror) */}
-      <path d={`M${cx+55} 42 C${cx+70} 30 ${cx+80} 28 ${cx+72} 36`} stroke={color} strokeWidth="1.5" opacity="0.5" fill="none"/>
-      <ellipse cx={cx+74} cy="30" rx="8" ry="4.5" fill={color} opacity="0.42" transform={`rotate(40 ${cx+74} 30)`}/>
-      <path d={`M${cx+55} 42 C${cx+68} 52 ${cx+78} 54 ${cx+70} 46`} stroke={color} strokeWidth="1.5" opacity="0.45" fill="none"/>
-      <ellipse cx={cx+72} cy="52" rx="7" ry="4" fill={color} opacity="0.38" transform={`rotate(-35 ${cx+72} 52)`}/>
-      {/* Roses */}
-      <Rose x={cx-42} y={42} r={11}/>
-      <Rose x={cx+42} y={42} r={11}/>
-      <Rose x={cx} y={42} r={13}/>
+    <svg width={width} height="90" viewBox={`0 0 ${width} 90`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 60, left: 0, zIndex: 5 }}>
+
+      {/* ── SATIN BAND ── */}
+      <rect x="0" y="38" width={width} height="14" fill={color} opacity="0.68" rx="1"/>
+      <rect x="0" y="38" width={width} height="5"  fill="white" opacity="0.22" rx="1"/>
+      <rect x="0" y="48" width={width} height="4"  fill="black" opacity="0.07"/>
+
+      {/* ── LEAF SPRIGS left ── */}
+      <path d={`M${cx-52} 45 C${cx-68} 32 ${cx-80} 29 ${cx-70} 37`}
+            stroke={color} strokeWidth="1.5" opacity="0.55" fill="none"/>
+      <ellipse cx={cx-73} cy="31" rx="9" ry="5" fill={color} opacity="0.48"
+               transform={`rotate(-38 ${cx-73} 31)`}/>
+      <path d={`M${cx-52} 45 C${cx-66} 56 ${cx-78} 58 ${cx-68} 50`}
+            stroke={color} strokeWidth="1.5" opacity="0.48" fill="none"/>
+      <ellipse cx={cx-71} cy="55" rx="8" ry="4.5" fill={color} opacity="0.42"
+               transform={`rotate(33 ${cx-71} 55)`}/>
+      {/* Extra twig */}
+      <path d={`M${cx-60} 42 C${cx-74} 24 ${cx-86} 22 ${cx-78} 32`}
+            stroke={color} strokeWidth="1.2" opacity="0.38" fill="none"/>
+      <ellipse cx={cx-80} cy="24" rx="7" ry="4" fill={color} opacity="0.36"
+               transform={`rotate(-50 ${cx-80} 24)`}/>
+
+      {/* ── LEAF SPRIGS right (mirror) ── */}
+      <path d={`M${cx+52} 45 C${cx+68} 32 ${cx+80} 29 ${cx+70} 37`}
+            stroke={color} strokeWidth="1.5" opacity="0.55" fill="none"/>
+      <ellipse cx={cx+73} cy="31" rx="9" ry="5" fill={color} opacity="0.48"
+               transform={`rotate(38 ${cx+73} 31)`}/>
+      <path d={`M${cx+52} 45 C${cx+66} 56 ${cx+78} 58 ${cx+68} 50`}
+            stroke={color} strokeWidth="1.5" opacity="0.48" fill="none"/>
+      <ellipse cx={cx+71} cy="55" rx="8" ry="4.5" fill={color} opacity="0.42"
+               transform={`rotate(-33 ${cx+71} 55)`}/>
+      <path d={`M${cx+60} 42 C${cx+74} 24 ${cx+86} 22 ${cx+78} 32`}
+            stroke={color} strokeWidth="1.2" opacity="0.38" fill="none"/>
+      <ellipse cx={cx+80} cy="24" rx="7" ry="4" fill={color} opacity="0.36"
+               transform={`rotate(50 ${cx+80} 24)`}/>
+
+      {/* ── ROSES — small side, large center ── */}
+      <Rose x={cx-44} y={45} r={11}/>
+      <Rose x={cx+44} y={45} r={11}/>
+      <Rose x={cx}    y={45} r={14}/>
     </svg>
   );
 }
 
-// 5. ROMANTIC — tall teardrop loops + prominent heart center
+// 5. ROMANTIC — elegant teardrop loops with inner/outer depth, heart knot, V-cut tails
 function RibbonRomantic({ color, width }: { color: string; width: number }) {
   const cx = width / 2;
-  // Heart path helper: heart centered at (hx, hy) with radius hr
+  const by = 46; const bh = 12; const bm = by + bh / 2;
   const heart = (hx: number, hy: number, hr: number) =>
-    `M${hx} ${hy+hr} C${hx-hr*0.15} ${hy+hr*0.7},${hx-hr} ${hy+hr*0.5},${hx-hr} ${hy+hr*0.1} C${hx-hr} ${hy-hr*0.35},${hx-hr*0.5} ${hy-hr*0.6},${hx} ${hy-hr*0.2} C${hx+hr*0.5} ${hy-hr*0.6},${hx+hr} ${hy-hr*0.35},${hx+hr} ${hy+hr*0.1} C${hx+hr} ${hy+hr*0.5},${hx+hr*0.15} ${hy+hr*0.7},${hx} ${hy+hr} Z`;
+    `M${hx} ${hy+hr*0.9} C${hx-hr*0.12} ${hy+hr*0.65},${hx-hr} ${hy+hr*0.45},${hx-hr} ${hy} `+
+    `C${hx-hr} ${hy-hr*0.5},${hx-hr*0.42} ${hy-hr*0.72},${hx} ${hy-hr*0.28} `+
+    `C${hx+hr*0.42} ${hy-hr*0.72},${hx+hr} ${hy-hr*0.5},${hx+hr} ${hy} `+
+    `C${hx+hr} ${hy+hr*0.45},${hx+hr*0.12} ${hy+hr*0.65},${hx} ${hy+hr*0.9} Z`;
 
   return (
-    <svg width={width} height="110" viewBox={`0 0 ${width} 110`} fill="none"
-         className="absolute pointer-events-none" style={{ top: 60, left: 0, zIndex: 5 }}>
-      {/* Band */}
-      <rect x="0" y="46" width={width} height="12" fill={color} opacity="0.62" rx="1"/>
-      <rect x="0" y="46" width={width} height="4"  fill="white" opacity="0.2" rx="1"/>
+    <svg width={width} height="122" viewBox={`0 0 ${width} 122`} fill="none"
+         className="absolute pointer-events-none" style={{ top: 52, left: 0, zIndex: 5 }}>
 
-      {/* Left teardrop loop — tall, narrow, elegant */}
-      <path d={`M${cx-12} 52 C${cx-14} 28,${cx-32} 6,${cx-48} 10 C${cx-64} 14,${cx-68} 34,${cx-56} 46 C${cx-48} 53,${cx-26} 57,${cx-12} 52Z`}
-            fill={color} opacity="0.75"/>
-      <path d={`M${cx-12} 52 C${cx-15} 32,${cx-34} 12,${cx-47} 12`}
-            stroke="white" strokeWidth="1.5" opacity="0.25" fill="none"/>
+      {/* ── TAILS — narrow, V-cut ends ── */}
+      <path d={`M${cx-12} ${bm+2} C${cx-14} 72 ${cx-18} 96 ${cx-10} 114 C${cx-7} 120 ${cx-4} 120 ${cx-3} 114 C${cx-3} 96 ${cx-5} 74 ${cx-5} ${bm+2}Z`}
+            fill={color} opacity="0.78"/>
+      <path d={`M${cx-11} ${bm+4} C${cx-13} 74 ${cx-16} 96 ${cx-9} 112`}
+            stroke="white" strokeWidth="1.2" opacity="0.18" fill="none" strokeLinecap="round"/>
+      <path d={`M${cx+5} ${bm+2} C${cx+5} 74 ${cx+3} 96 ${cx+3} 114 C${cx+4} 120 ${cx+7} 120 ${cx+10} 114 C${cx+18} 96 ${cx+14} 72 ${cx+12} ${bm+2}Z`}
+            fill={color} opacity="0.78"/>
+      <path d={`M${cx+11} ${bm+4} C${cx+13} 74 ${cx+16} 96 ${cx+9} 112`}
+            stroke="white" strokeWidth="1.2" opacity="0.18" fill="none" strokeLinecap="round"/>
 
-      {/* Right teardrop loop (mirror) */}
-      <path d={`M${cx+12} 52 C${cx+14} 28,${cx+32} 6,${cx+48} 10 C${cx+64} 14,${cx+68} 34,${cx+56} 46 C${cx+48} 53,${cx+26} 57,${cx+12} 52Z`}
-            fill={color} opacity="0.75"/>
-      <path d={`M${cx+12} 52 C${cx+15} 32,${cx+34} 12,${cx+47} 12`}
-            stroke="white" strokeWidth="1.5" opacity="0.25" fill="none"/>
+      {/* ── LEFT TEARDROP LOOP outer face ── */}
+      <path d={`M${cx-12} ${bm+2} C${cx-14} 26 ${cx-34} 4 ${cx-50} 8 C${cx-70} 12 ${cx-74} 34 ${cx-60} 48 C${cx-50} 57 ${cx-28} 60 ${cx-12} ${bm-2}Z`}
+            fill={color} opacity="0.86"/>
+      {/* Left loop inner shadow (concave inside) */}
+      <path d={`M${cx-12} ${bm} C${cx-15} 30 ${cx-32} 8 ${cx-47} 12 C${cx-64} 16 ${cx-67} 36 ${cx-56} 46`}
+            stroke="black" strokeWidth="12" strokeLinecap="round" opacity="0.09" fill="none"/>
+      {/* Left loop outer highlight */}
+      <path d={`M${cx-16} 28 C${cx-26} 8 ${cx-44} 4 ${cx-56} 8`}
+            stroke="white" strokeWidth="2.2" opacity="0.28" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx-14} 38 C${cx-28} 18 ${cx-46} 10 ${cx-60} 14`}
+            stroke="white" strokeWidth="0.9" opacity="0.14" strokeLinecap="round" fill="none"/>
 
-      {/* Tails — pointed like cut ribbon */}
-      <path d={`M${cx-10} 58 C${cx-22} 74,${cx-38} 96,${cx-26} 108 C${cx-20} 114,${cx-18} 108,${cx-14} 102 C${cx-10} 96,${cx-10} 82,${cx-10} 58`}
-            fill={color} opacity="0.68"/>
-      <path d={`M${cx+10} 58 C${cx+22} 74,${cx+38} 96,${cx+26} 108 C${cx+20} 114,${cx+18} 108,${cx+14} 102 C${cx+10} 96,${cx+10} 82,${cx+10} 58`}
-            fill={color} opacity="0.68"/>
+      {/* ── RIGHT TEARDROP LOOP outer face ── */}
+      <path d={`M${cx+12} ${bm+2} C${cx+14} 26 ${cx+34} 4 ${cx+50} 8 C${cx+70} 12 ${cx+74} 34 ${cx+60} 48 C${cx+50} 57 ${cx+28} 60 ${cx+12} ${bm-2}Z`}
+            fill={color} opacity="0.86"/>
+      {/* Right loop inner shadow */}
+      <path d={`M${cx+12} ${bm} C${cx+15} 30 ${cx+32} 8 ${cx+47} 12 C${cx+64} 16 ${cx+67} 36 ${cx+56} 46`}
+            stroke="black" strokeWidth="12" strokeLinecap="round" opacity="0.09" fill="none"/>
+      {/* Right loop outer highlight */}
+      <path d={`M${cx+16} 28 C${cx+26} 8 ${cx+44} 4 ${cx+56} 8`}
+            stroke="white" strokeWidth="2.2" opacity="0.28" strokeLinecap="round" fill="none"/>
+      <path d={`M${cx+14} 38 C${cx+28} 18 ${cx+46} 10 ${cx+60} 14`}
+            stroke="white" strokeWidth="0.9" opacity="0.14" strokeLinecap="round" fill="none"/>
 
-      {/* Large heart at center */}
-      <path d={heart(cx, 50, 13)} fill={color} opacity="1"/>
-      {/* Heart highlight */}
-      <path d={heart(cx-1, 48, 5)} fill="white" opacity="0.28"/>
+      {/* ── BAND ── */}
+      <rect x="0" y={by} width={width} height={bh} fill={color} opacity="0.80" rx="1"/>
+      <rect x="0" y={by} width={width} height="4"  fill="white" opacity="0.22" rx="1"/>
+      <rect x="0" y={by+bh-3} width={width} height="3" fill="black" opacity="0.07"/>
+
+      {/* ── HEART KNOT ── */}
+      <path d={heart(cx, bm, 15)} fill={color} opacity="1"/>
+      {/* Heart depth shadow */}
+      <path d={heart(cx+1, bm+2, 9)} fill="black" opacity="0.09"/>
+      {/* Heart highlight — top-left lobe */}
+      <ellipse cx={cx-5} cy={bm-6} rx="5" ry="3.5" fill="white" opacity="0.26"
+               transform={`rotate(-20 ${cx-5} ${bm-6})`}/>
     </svg>
   );
 }
 
-// 6. LUXURY — full-height angular fan bow spanning the entire envelope
+// 6. LUXURY — curved fan bow with satin sheen per panel, elegant fabric knot
 function RibbonLuxury({ color, width }: { color: string; width: number }) {
   const cx = width / 2;
-  const cy = 105; // center of 210px envelope
-  const h  = 210; // full envelope height
-  // Hinge points (where fan radiates from)
-  const lx = cx - 18; const rx = cx + 18;
-  // Fan outer reach: nearly to envelope edges
-  const outerX = 8;
+  const cy = 105;
+  const h  = 210;
+  const lx = cx - 16; const rx = cx + 16;
+
+  // Generate a curved fan panel path: from hinge point, curving to two outer points
+  function fanPath(hx: number, hy: number, x1: number, y1: number, x2: number, y2: number) {
+    const mx1 = (hx + x1) / 2; const my1 = (hy + y1) / 2;
+    const mx2 = (hx + x2) / 2; const my2 = (hy + y2) / 2;
+    return `M${hx} ${hy} Q${mx1*0.7+x1*0.3} ${my1*0.7+y1*0.3} ${x1} ${y1} Q${(x1+x2)/2} ${(y1+y2)/2} ${x2} ${y2} Q${mx2*0.7+x2*0.3} ${my2*0.7+y2*0.3} ${hx} ${hy} Z`;
+  }
+
+  // Left fan — 5 panels radiating top and bottom
+  const lTopPts = [[4,2],[28,14],[54,30],[82,48],[cx-16,cy-11]] as [number,number][];
+  const lBotPts = [[4,h-2],[28,h-14],[54,h-30],[82,h-48],[cx-16,cy+11]] as [number,number][];
+  const panelOpacity = [0.88, 0.75, 0.62, 0.50, 0.38];
 
   return (
     <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`} fill="none"
          className="absolute pointer-events-none" style={{ top: 0, left: 0, zIndex: 5 }}>
 
-      {/* ── Double band ── */}
-      <rect x="0" y={cy-11} width={width} height="22" fill={color} opacity="0.68" rx="1"/>
-      <rect x="0" y={cy-11} width={width} height="6"  fill="white" opacity="0.2"  rx="1"/>
-      <rect x="0" y={cy+9}  width={width} height="4"  fill="black" opacity="0.07"/>
-      <rect x="0" y={cy-18} width={width} height="7"  fill={color} opacity="0.38" rx="1"/>
-      <rect x="0" y={cy+13} width={width} height="6"  fill={color} opacity="0.3"  rx="1"/>
+      {/* ── LEFT fan panels — top ── */}
+      {lTopPts.slice(0,-1).map(([x1,y1], i) => {
+        const [x2,y2] = lTopPts[i+1];
+        return (
+          <g key={`lt${i}`}>
+            <path d={fanPath(lx, cy, x1, y1, x2, y2)} fill={color} opacity={panelOpacity[i]}/>
+            {/* Sheen line on outer edge */}
+            <line x1={lx} y1={cy} x2={x1} y2={y1}
+                  stroke="white" strokeWidth={1.8 - i*0.3} opacity={0.22 - i*0.04}/>
+          </g>
+        );
+      })}
+      {/* ── LEFT fan panels — bottom ── */}
+      {lBotPts.slice(0,-1).map(([x1,y1], i) => {
+        const [x2,y2] = lBotPts[i+1];
+        return (
+          <g key={`lb${i}`}>
+            <path d={fanPath(lx, cy, x1, y1, x2, y2)} fill={color} opacity={panelOpacity[i]}/>
+            <line x1={lx} y1={cy} x2={x1} y2={y1}
+                  stroke="white" strokeWidth={1.8 - i*0.3} opacity={0.18 - i*0.03}/>
+          </g>
+        );
+      })}
 
-      {/* ── LEFT fans — 4 panels top + 4 panels bottom ── */}
-      {/* Top outer → inner */}
-      <polygon points={`${lx},${cy} ${outerX},2      ${outerX+26},14`}    fill={color} opacity="0.85"/>
-      <polygon points={`${lx},${cy} ${outerX+26},14  ${outerX+52},28`}    fill={color} opacity="0.72"/>
-      <polygon points={`${lx},${cy} ${outerX+52},28  ${outerX+76},44`}    fill={color} opacity="0.60"/>
-      <polygon points={`${lx},${cy} ${outerX+76},44  ${outerX+98},60`}    fill={color} opacity="0.48"/>
-      {/* Bottom outer → inner */}
-      <polygon points={`${lx},${cy} ${outerX},${h-2}      ${outerX+26},${h-14}`} fill={color} opacity="0.85"/>
-      <polygon points={`${lx},${cy} ${outerX+26},${h-14}  ${outerX+52},${h-28}`} fill={color} opacity="0.72"/>
-      <polygon points={`${lx},${cy} ${outerX+52},${h-28}  ${outerX+76},${h-44}`} fill={color} opacity="0.60"/>
-      <polygon points={`${lx},${cy} ${outerX+76},${h-44}  ${outerX+98},${h-60}`} fill={color} opacity="0.48"/>
-      {/* Sheen edge lines */}
-      <line x1={lx} y1={cy} x2={outerX}     y2="2"      stroke="white" strokeWidth="1.2" opacity="0.25"/>
-      <line x1={lx} y1={cy} x2={outerX+26}  y2="14"     stroke="white" strokeWidth="0.9" opacity="0.18"/>
-      <line x1={lx} y1={cy} x2={outerX+52}  y2="28"     stroke="white" strokeWidth="0.7" opacity="0.12"/>
-      <line x1={lx} y1={cy} x2={outerX}     y2={h-2}    stroke="white" strokeWidth="1.2" opacity="0.2"/>
-      <line x1={lx} y1={cy} x2={outerX+26}  y2={h-14}   stroke="white" strokeWidth="0.9" opacity="0.14"/>
+      {/* ── RIGHT fan panels — mirror ── */}
+      {lTopPts.slice(0,-1).map(([x1,y1], i) => {
+        const [x2,y2] = lTopPts[i+1];
+        const rx1 = width - x1; const rx2 = width - x2;
+        return (
+          <g key={`rt${i}`}>
+            <path d={fanPath(rx, cy, rx1, y1, rx2, y2)} fill={color} opacity={panelOpacity[i]}/>
+            <line x1={rx} y1={cy} x2={rx1} y2={y1}
+                  stroke="white" strokeWidth={1.8 - i*0.3} opacity={0.22 - i*0.04}/>
+          </g>
+        );
+      })}
+      {lBotPts.slice(0,-1).map(([x1,y1], i) => {
+        const [x2,y2] = lBotPts[i+1];
+        const rx1 = width - x1; const rx2 = width - x2;
+        return (
+          <g key={`rb${i}`}>
+            <path d={fanPath(rx, cy, rx1, y1, rx2, y2)} fill={color} opacity={panelOpacity[i]}/>
+            <line x1={rx} y1={cy} x2={rx1} y2={y1}
+                  stroke="white" strokeWidth={1.8 - i*0.3} opacity={0.18 - i*0.03}/>
+          </g>
+        );
+      })}
 
-      {/* ── RIGHT fans — mirror ── */}
-      <polygon points={`${rx},${cy} ${width-outerX},2      ${width-outerX-26},14`}    fill={color} opacity="0.85"/>
-      <polygon points={`${rx},${cy} ${width-outerX-26},14  ${width-outerX-52},28`}    fill={color} opacity="0.72"/>
-      <polygon points={`${rx},${cy} ${width-outerX-52},28  ${width-outerX-76},44`}    fill={color} opacity="0.60"/>
-      <polygon points={`${rx},${cy} ${width-outerX-76},44  ${width-outerX-98},60`}    fill={color} opacity="0.48"/>
-      <polygon points={`${rx},${cy} ${width-outerX},${h-2}      ${width-outerX-26},${h-14}`} fill={color} opacity="0.85"/>
-      <polygon points={`${rx},${cy} ${width-outerX-26},${h-14}  ${width-outerX-52},${h-28}`} fill={color} opacity="0.72"/>
-      <polygon points={`${rx},${cy} ${width-outerX-52},${h-28}  ${width-outerX-76},${h-44}`} fill={color} opacity="0.60"/>
-      <polygon points={`${rx},${cy} ${width-outerX-76},${h-44}  ${width-outerX-98},${h-60}`} fill={color} opacity="0.48"/>
-      <line x1={rx} y1={cy} x2={width-outerX}    y2="2"      stroke="white" strokeWidth="1.2" opacity="0.25"/>
-      <line x1={rx} y1={cy} x2={width-outerX-26} y2="14"     stroke="white" strokeWidth="0.9" opacity="0.18"/>
-      <line x1={rx} y1={cy} x2={width-outerX}    y2={h-2}    stroke="white" strokeWidth="1.2" opacity="0.2"/>
+      {/* ── DOUBLE SATIN BAND ── */}
+      <rect x="0" y={cy-20} width={width} height="8"  fill={color} opacity="0.42" rx="1"/>
+      <rect x="0" y={cy-12} width={width} height="24" fill={color} opacity="0.72" rx="1"/>
+      <rect x="0" y={cy-12} width={width} height="7"  fill="white" opacity="0.22" rx="1"/>
+      <rect x="0" y={cy+10} width={width} height="4"  fill="black" opacity="0.07"/>
+      <rect x="0" y={cy+14} width={width} height="7"  fill={color} opacity="0.34" rx="1"/>
 
-      {/* ── Center knot ── */}
-      <rect x={cx-38} y={cy-22} width="76" height="44" fill={color} opacity="0.95" rx="3"/>
-      <rect x={cx-28} y={cy-16} width="56" height="32" fill={color} opacity="1"    rx="2"/>
-      <line x1={cx-16} y1={cy-14} x2={cx-16} y2={cy+14} stroke="white" strokeWidth="1.4" opacity="0.22"/>
-      <line x1={cx+16} y1={cy-14} x2={cx+16} y2={cy+14} stroke="white" strokeWidth="1.4" opacity="0.18"/>
-      <line x1={cx-24} y1={cy-6}  x2={cx+24} y2={cy-6}  stroke="white" strokeWidth="0.9" opacity="0.14"/>
-      <line x1={cx-24} y1={cy+6}  x2={cx+24} y2={cy+6}  stroke="white" strokeWidth="0.7" opacity="0.1"/>
-      <rect x={cx-14}  y={cy-13}  width="12" height="26" fill="white"   opacity="0.14"    rx="2"/>
+      {/* ── CENTER KNOT — folded fabric block ── */}
+      {/* Outer shadow of knot */}
+      <rect x={cx-36} y={cy-21} width="72" height="42" fill="black" opacity="0.08" rx="3"/>
+      {/* Knot main body */}
+      <rect x={cx-34} y={cy-20} width="68" height="40" fill={color} opacity="0.96" rx="2"/>
+      {/* Top satin highlight */}
+      <rect x={cx-34} y={cy-20} width="68" height="10" fill="white" opacity="0.20" rx="2"/>
+      {/* Vertical fold lines (like stacked ribbon layers) */}
+      <line x1={cx-14} y1={cy-18} x2={cx-14} y2={cy+18} stroke="black" strokeWidth="1.2" opacity="0.12"/>
+      <line x1={cx+14} y1={cy-18} x2={cx+14} y2={cy+18} stroke="black" strokeWidth="1.2" opacity="0.10"/>
+      {/* Horizontal gather lines */}
+      <line x1={cx-28} y1={cy-6}  x2={cx+28} y2={cy-6}  stroke="black" strokeWidth="0.8" opacity="0.09"/>
+      <line x1={cx-28} y1={cy+6}  x2={cx+28} y2={cy+6}  stroke="black" strokeWidth="0.7" opacity="0.07"/>
+      {/* Center vertical satin sheen */}
+      <rect x={cx-8} y={cy-18} width="16" height="36" fill="white" opacity="0.10" rx="2"/>
+      {/* Knot top highlight spot */}
+      <ellipse cx={cx-8} cy={cy-10} rx="10" ry="5" fill="white" opacity="0.18"/>
     </svg>
   );
 }
@@ -508,17 +712,44 @@ function DeskSurface({ color }: { color: string }) {
   );
 }
 
+// ── Envelope fold lines — kite/diamond crease pattern visible on the front face ──
+function EnvelopeFolds({ width, height, color }: { width: number; height: number; color: string }) {
+  const cx = width / 2;
+  const cy = height / 2;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} fill="none"
+         className="absolute inset-0 pointer-events-none" style={{ zIndex: 1 }}>
+      {/* Side panel shading — the left and right flaps folded in */}
+      <polygon points={`0,0 0,${height} ${cx},${cy}`}          fill={color} opacity="0.10"/>
+      <polygon points={`${width},0 ${width},${height} ${cx},${cy}`} fill={color} opacity="0.10"/>
+      {/* Bottom panel shading */}
+      <polygon points={`0,${height} ${width},${height} ${cx},${cy}`} fill={color} opacity="0.07"/>
+      {/* Fold crease lines — diagonal from each corner to center */}
+      <line x1="0"     y1="0"      x2={cx} y2={cy} stroke={color} strokeWidth="0.9" opacity="0.28"/>
+      <line x1={width} y1="0"      x2={cx} y2={cy} stroke={color} strokeWidth="0.9" opacity="0.28"/>
+      <line x1="0"     y1={height} x2={cx} y2={cy} stroke={color} strokeWidth="0.9" opacity="0.24"/>
+      <line x1={width} y1={height} x2={cx} y2={cy} stroke={color} strokeWidth="0.9" opacity="0.24"/>
+      {/* Subtle center horizontal crease where side panels meet */}
+      <line x1="0" y1={cy} x2={width} y2={cy}
+            stroke={color} strokeWidth="0.5" strokeDasharray="3 7" opacity="0.14"/>
+    </svg>
+  );
+}
+
 export default function EnvelopeIntro({ event, participant, theme, onOpen }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
 
+  const isShaking  = phase === "shaking";
   const isOpen     = phase === "opening" || phase === "rising" || phase === "done";
   const isRising   = phase === "rising"  || phase === "done";
-  const isBreaking = phase === "opening"; // seal & bow animating
+  const isBreaking = phase === "opening";
 
   async function handleClick() {
     if (phase !== "idle") return;
+    setPhase("shaking");
+    await delay(480);
     setPhase("opening");
-    await delay(900); // extra time for break animations
+    await delay(1000);
     setPhase("rising");
     await delay(900);
     setPhase("done");
@@ -706,37 +937,77 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
           </AnimatePresence>
 
           {/* ── ENVELOPE ── */}
-          <div className="relative z-10" style={{ width: 300, height: 210, perspective: 800 }}>
+          <motion.div
+            className="relative z-10"
+            style={{ width: 300, height: 210, perspective: 800 }}
+            animate={isShaking ? {
+              x: [0, -8, 10, -10, 8, -6, 6, -4, 4, -2, 2, 0],
+              rotate: [0, -2, 2.5, -2.5, 2, -1.5, 1.5, -1, 1, -0.5, 0.5, 0],
+            } : {}}
+            transition={isShaking ? { duration: 0.50, ease: "easeInOut" } : {}}
+          >
 
             {/* Body */}
             <div
-              className="absolute inset-0 rounded-b-lg shadow-2xl overflow-hidden"
-              style={{ backgroundColor: envBody, border: `1.5px solid ${envBorder}` }}
+              className="absolute inset-0 rounded-b-md overflow-hidden"
+              style={{
+                backgroundColor: envBody,
+                border: `1px solid ${envBorder}55`,
+                boxShadow: `
+                  0 2px 4px rgba(0,0,0,0.14),
+                  0 8px 24px rgba(0,0,0,0.22),
+                  0 24px 48px rgba(0,0,0,0.14),
+                  inset 0 1px 2px rgba(255,255,255,0.10),
+                  inset 0 -2px 6px rgba(0,0,0,0.10)
+                `,
+              }}
             >
+              {/* Realistic fold crease lines and panel shading */}
+              <EnvelopeFolds width={300} height={210} color={envBorder} />
+
+              {/* Bottom V triangles — more visible for realistic envelope look */}
               <div className="absolute bottom-0 left-0 w-0 h-0"
-                   style={{ borderRight: "150px solid transparent", borderBottom: `105px solid ${envBorder}22` }} />
+                   style={{ borderRight: "150px solid transparent", borderBottom: `105px solid ${envBorder}50`, zIndex: 2 }} />
               <div className="absolute bottom-0 right-0 w-0 h-0"
-                   style={{ borderLeft: "150px solid transparent", borderBottom: `105px solid ${envBorder}22` }} />
+                   style={{ borderLeft: "150px solid transparent", borderBottom: `105px solid ${envBorder}50`, zIndex: 2 }} />
+
+              {/* Subtle inner-liner tint visible at top opening */}
+              <div style={{
+                position: "absolute", top: 0, left: 0, right: 0, height: 42,
+                background: `linear-gradient(to bottom, ${sealBg}22, transparent)`,
+                zIndex: 1,
+              }} />
+
+              {/* Thin inner-edge highlight to simulate paper rim */}
+              <div style={{
+                position: "absolute", inset: 0,
+                border: `0.5px solid ${envBorder}28`,
+                borderRadius: "0 0 6px 6px",
+                pointerEvents: "none", zIndex: 3,
+              }} />
 
               {isBotanical && (
                 <>
-                  <div className="absolute bottom-2 left-2 opacity-50">
+                  <div className="absolute bottom-2 left-2 opacity-50" style={{ zIndex: 3 }}>
                     <EnvelopeBranch color={envBorder} />
                   </div>
-                  <div className="absolute bottom-2 right-2 opacity-50" style={{ transform: "scaleX(-1)" }}>
+                  <div className="absolute bottom-2 right-2 opacity-50" style={{ transform: "scaleX(-1)", zIndex: 3 }}>
                     <EnvelopeBranch color={envBorder} />
                   </div>
                 </>
               )}
             </div>
 
-            {/* Rising card */}
+            {/* Rising card — with a gentle sway as it emerges */}
             <motion.div
               className="absolute left-4 right-4 rounded shadow-lg flex flex-col items-center justify-center gap-2 overflow-hidden pointer-events-none"
               style={{ backgroundColor: cardBg, border: `1px solid ${envBorder}`, bottom: 12, height: 160 }}
-              initial={{ y: 0, opacity: 0 }}
-              animate={isRising ? { y: -130, opacity: 1 } : { y: 0, opacity: 0 }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ y: 0, opacity: 0, rotate: 0 }}
+              animate={isRising
+                ? { y: -130, opacity: 1, rotate: [0, 1.2, -0.8, 0.5, 0] }
+                : { y: 0, opacity: 0, rotate: 0 }
+              }
+              transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
             >
               {isBotanical && (
                 <>
@@ -760,30 +1031,39 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
               className="absolute top-0 left-0 right-0 origin-top"
               style={{ height: 105, transformStyle: "preserve-3d", zIndex: 10, perspective: 600 }}
               animate={isOpen ? { rotateX: 180 } : { rotateX: 0 }}
-              transition={{ duration: 0.65, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 0.72, ease: [0.35, 0, 0.15, 1] }}
             >
-              {/* Front face — downward triangle (closed) */}
+              {/* Front face — downward triangle (closed) with subtle fold shadow */}
               <div className="absolute inset-0"
                    style={{
                      clipPath: "polygon(0 0, 100% 0, 50% 100%)",
                      backgroundColor: envBody,
-                     outline: `1.5px solid ${envBorder}`,
+                     outline: `1px solid ${envBorder}55`,
                      outlineOffset: -1,
                      backfaceVisibility: "hidden",
+                     filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.20))",
                    }} />
-              {/* Back face — upward triangle (open), inverted on X axis */}
+              {/* Back face — inner liner (visible when open): diagonal stripe security pattern */}
               <div className="absolute inset-0"
                    style={{
                      clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
-                     backgroundColor: isBotanical ? `${envBorder}30` : `${theme.primary}14`,
+                     backgroundColor: sealBg,
+                     backgroundImage: `repeating-linear-gradient(
+                       -45deg,
+                       transparent,
+                       transparent 4px,
+                       rgba(255,255,255,0.13) 4px,
+                       rgba(255,255,255,0.13) 5px
+                     )`,
+                     opacity: 0.82,
                      transform: "rotateX(180deg)",
                      backfaceVisibility: "hidden",
                    }} />
             </motion.div>
 
-            {/* Golden ribbon — idle: static; opening: bow snaps then stretches apart */}
+            {/* Golden ribbon — idle+shaking: static; opening: bow snaps apart */}
             <AnimatePresence>
-              {(phase === "idle" || phase === "opening") && (
+              {(phase === "idle" || phase === "shaking" || phase === "opening") && (
                 <motion.div
                   key="ribbon"
                   initial={{ opacity: 0, scaleX: 0 }}
@@ -808,39 +1088,40 @@ export default function EnvelopeIntro({ event, participant, theme, onOpen }: Pro
               )}
             </AnimatePresence>
 
-            {/* Wax seal — with crack + fragment break animation */}
+            {/* Wax seal — pulse on shake, crack on opening */}
             <AnimatePresence>
-              {(phase === "idle" || phase === "opening") && (
+              {(phase === "idle" || phase === "shaking" || phase === "opening") && (
                 <motion.div
                   initial={{ scale: 0, opacity: 0 }}
                   animate={isBreaking
                     ? { scale: [1, 1.18, 1.12, 0], opacity: [1, 1, 1, 0], rotate: [0, -6, 4, 0] }
+                    : isShaking
+                    ? { scale: [1, 1.07, 0.96, 1.04, 0.98, 1], rotate: [0, -3, 3, -2, 1, 0] }
                     : { scale: 1, opacity: 1, rotate: 0 }
                   }
                   exit={{ scale: 0, opacity: 0 }}
                   transition={isBreaking
                     ? { duration: 0.7, times: [0, 0.25, 0.55, 1], ease: "easeInOut" }
+                    : isShaking
+                    ? { duration: 0.50, ease: "easeInOut" }
                     : { delay: 0.4, type: "spring", stiffness: 180, damping: 14 }
                   }
                   className="absolute left-1/2 -translate-x-1/2 z-20"
                   style={{ top: 79 }}
                 >
-                  {/* Relative container so cracks overlay the seal */}
                   <div className="relative" style={{ width: 60, height: 60 }}>
                     <WaxSealSvg bg={sealBg} fg={sealFg} initials={sealInitials} size={60} />
-                    {/* Crack lines appear on breaking */}
                     {isBreaking && <SealCracks size={60} />}
-                    {/* Fragments fly apart */}
                     {isBreaking && <SealFragments size={60} color={sealBg} />}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
 
           {/* ── BOTTOM HINT ── */}
           <AnimatePresence>
-            {phase === "idle" && (
+            {(phase === "idle" || phase === "shaking") && (
               <motion.div
                 key="hint-bottom"
                 initial={{ opacity: 0, y: 10 }}
