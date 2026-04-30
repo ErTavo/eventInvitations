@@ -20,7 +20,7 @@ export type AttendanceStatus = "pending" | "confirmed" | "declined";
 
 export type ThemeId = "vintage" | "elegant" | "modern" | "floral" | "minimal" | "leaves" | "custom";
 
-export type EventType = "general" | "wedding" | "quinceanera" | "birthday";
+export type EventType = "general" | "wedding" | "quinceanera" | "birthday" | "save_the_date";
 
 export interface EventStyle {
   theme: ThemeId;
@@ -36,6 +36,7 @@ export interface EventStyle {
   sealColor?: string;    // overrides primary for the wax seal background
   sealTextColor?: string;
   eventType?: EventType;
+  saveTheDateStyle?: "cinematic" | "editorial";
   person1Name?: string;
   person2Name?: string;
   greetingText?: string; // shown before the participant name, e.g. "Con mucha alegría te invitamos"

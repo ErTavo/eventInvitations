@@ -294,10 +294,240 @@ export function BotanicalInvitationCard({ event, participant, theme, parentsConf
   );
 }
 
+// ─── Save the Date — shared date helpers ──────────────────────────────────────
+const STD_DAYS   = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const STD_MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+function parseDateParts(dateStr: string) {
+  const d     = new Date(dateStr);
+  const h     = d.getHours();
+  const mins  = String(d.getMinutes()).padStart(2, "0");
+  const ampm  = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return {
+    dayName : STD_DAYS[d.getDay()],
+    dayNum  : d.getDate(),
+    month   : STD_MONTHS[d.getMonth()],
+    year    : d.getFullYear(),
+    timeStr : `${hour12}:${mins} ${ampm}`,
+  };
+}
+
+// ─── Style 1: CINEMATIC — full-bleed photo, script title, dark vignette ───────
+function SaveTheDateCinematic({ event, theme }: { event: Event; theme: ThemeConfig }) {
+  const hasCover = !!event.cover_image;
+  const name1    = event.style.person1Name?.trim();
+  const name2    = event.style.person2Name?.trim();
+  const hasPair  = !!(name1 && name2);
+  const { dayName, dayNum, month, year, timeStr } = parseDateParts(event.date);
+  const fallback = `linear-gradient(160deg, ${theme.primary} 0%, ${theme.accent}cc 100%)`;
+
+  return (
+    <section className="relative h-screen flex flex-col items-center justify-between overflow-hidden">
+      {hasCover ? (
+        <>
+          <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+               style={{ backgroundImage: `url(${event.cover_image})` }}/>
+          <div className="absolute inset-0"
+               style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.44) 0%, rgba(0,0,0,0.06) 42%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.65) 100%)" }}/>
+        </>
+      ) : (
+        <div className="absolute inset-0" style={{ background: fallback }}/>
+      )}
+
+      {/* "Save the Date" script — top */}
+      <motion.div
+        initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 text-center pt-14 px-6 w-full"
+      >
+        <p style={{
+          fontFamily: "Great Vibes, cursive",
+          fontSize: "clamp(3rem, 14vw, 5.5rem)",
+          color: "white", lineHeight: 1.15,
+          textShadow: "0 2px 16px rgba(0,0,0,0.35)",
+        }}>Save the Date</p>
+      </motion.div>
+
+      {/* Names + date row — bottom */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 text-center pb-16 px-6 w-full"
+      >
+        <div className="mb-6">
+          {hasPair ? (
+            <h1 suppressHydrationWarning style={{
+              fontFamily: "Cormorant Garamond, Georgia, serif",
+              fontSize: "clamp(2rem, 10vw, 4rem)", fontWeight: 700,
+              color: "white", letterSpacing: "0.04em",
+              textShadow: "0 2px 12px rgba(0,0,0,0.4)", lineHeight: 1.1,
+            }}>{name1} + {name2}</h1>
+          ) : (
+            <h1 style={{
+              fontFamily: "Cormorant Garamond, Georgia, serif",
+              fontSize: "clamp(1.8rem, 9vw, 3.5rem)", fontWeight: 700,
+              color: "white", textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+            }}>{event.name}</h1>
+          )}
+        </div>
+
+        {/* Day/Time | DayNum | Month/Year */}
+        <div className="flex items-center justify-center gap-4 md:gap-6 text-white">
+          <div className="text-right" suppressHydrationWarning>
+            <p style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "clamp(0.85rem,3.5vw,1.05rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "capitalize" }}>{dayName}</p>
+            <p style={{ fontSize: "clamp(0.72rem,2.8vw,0.85rem)", opacity: 0.75, letterSpacing: "0.05em" }}>{timeStr}</p>
+          </div>
+          <div style={{ width: 1, height: 48, backgroundColor: "rgba(255,255,255,0.45)" }}/>
+          <div suppressHydrationWarning>
+            <p style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "clamp(2.8rem,12vw,5rem)", fontWeight: 300, lineHeight: 1, letterSpacing: "-0.02em" }}>{dayNum}</p>
+          </div>
+          <div style={{ width: 1, height: 48, backgroundColor: "rgba(255,255,255,0.45)" }}/>
+          <div className="text-left" suppressHydrationWarning>
+            <p style={{ fontFamily: "Cormorant Garamond, serif", fontSize: "clamp(0.85rem,3.5vw,1.05rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "capitalize" }}>{month}</p>
+            <p style={{ fontSize: "clamp(0.72rem,2.8vw,0.85rem)", opacity: 0.75, letterSpacing: "0.05em" }}>{year}</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Scroll hint */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.2 }}
+        className="absolute bottom-4 z-10 flex flex-col items-center gap-1">
+        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.6rem", letterSpacing: "0.3em", textTransform: "uppercase" }}>Ver invitación</p>
+        <motion.div animate={{ y: [0,8,0] }} transition={{ repeat: Infinity, duration: 1.5 }}
+          className="w-px h-8" style={{ backgroundColor: "rgba(255,255,255,0.35)" }}/>
+      </motion.div>
+    </section>
+  );
+}
+
+// ─── Style 2: EDITORIAL — newspaper layout, light bg, bold serif, framed photo ─
+function SaveTheDateEditorial({ event }: { event: Event }) {
+  const hasCover = !!event.cover_image;
+  const name1    = event.style.person1Name?.trim();
+  const name2    = event.style.person2Name?.trim();
+  const hasPair  = !!(name1 && name2);
+  const { dayName, dayNum, month, year } = parseDateParts(event.date);
+
+  const BG   = "#f7f4ef";
+  const INK  = "#111111";
+  const RULE = "1.5px solid #111111";
+  const FONT = "Cormorant Garamond, Georgia, serif";
+
+  return (
+    <section className="relative min-h-screen flex flex-col overflow-hidden" style={{ backgroundColor: BG }}>
+
+      {/* ── TITLE BLOCK ── */}
+      <motion.div
+        initial={{ opacity: 0, y: -14 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="px-8 pt-10 pb-0"
+      >
+        <div style={{ borderTop: RULE, paddingTop: 10 }}>
+          <p style={{
+            fontFamily: FONT,
+            fontSize: "clamp(2rem, 9vw, 3.8rem)",
+            fontWeight: 900, textTransform: "uppercase",
+            letterSpacing: "0.1em", color: INK,
+            textAlign: "center", lineHeight: 1,
+          }}>
+            Save the Date
+          </p>
+        </div>
+        <div style={{ borderBottom: RULE, marginTop: 10 }}/>
+      </motion.div>
+
+      {/* ── PHOTO ── */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.9, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+        className="mx-8 my-5 overflow-hidden flex-1"
+        style={{ minHeight: "38vh", maxHeight: "52vh" }}
+      >
+        {hasCover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={event.cover_image!} alt="" className="w-full h-full object-cover" style={{ display: "block" }}/>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2"
+               style={{ backgroundColor: "#d8d5cf", minHeight: "38vh" }}>
+            <p style={{ color: "#888", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              Foto de portada
+            </p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* ── NAMES ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        className="px-8"
+      >
+        <h1 suppressHydrationWarning style={{
+          fontFamily: FONT,
+          fontSize: "clamp(2.2rem, 11vw, 5rem)",
+          fontWeight: 900, textTransform: "uppercase",
+          letterSpacing: "0.06em", color: INK,
+          textAlign: "center", lineHeight: 1.05,
+        }}>
+          {hasPair ? `${name1} & ${name2}` : event.name}
+        </h1>
+      </motion.div>
+
+      {/* ── DATE + LOCATION footer ── */}
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ duration: 0.7, delay: 0.85 }}
+        className="px-8 pb-10 pt-4"
+      >
+        <div style={{ borderTop: "1px solid #111", marginBottom: 10 }}/>
+        <div className="flex justify-between items-start gap-4">
+          <p suppressHydrationWarning style={{
+            fontFamily: FONT, fontSize: "clamp(0.6rem,2.8vw,0.82rem)",
+            textTransform: "uppercase", letterSpacing: "0.14em", color: INK,
+            lineHeight: 1.4,
+          }}>
+            {dayName} {month} {dayNum}, {year}
+          </p>
+          {event.location && (
+            <p style={{
+              fontFamily: FONT, fontSize: "clamp(0.6rem,2.8vw,0.82rem)",
+              textTransform: "uppercase", letterSpacing: "0.14em", color: INK,
+              lineHeight: 1.4, textAlign: "right",
+            }}>
+              {event.location}
+            </p>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Scroll hint */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
+        className="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+        <motion.div animate={{ y: [0,8,0] }} transition={{ repeat: Infinity, duration: 1.5 }}
+          className="w-px h-8" style={{ backgroundColor: "rgba(0,0,0,0.2)" }}/>
+      </motion.div>
+    </section>
+  );
+}
+
+// ─── Dispatcher ────────────────────────────────────────────────────────────────
+function SaveTheDateHero({ event, theme }: { event: Event; theme: ThemeConfig }) {
+  return event.style.saveTheDateStyle === "editorial"
+    ? <SaveTheDateEditorial event={event} />
+    : <SaveTheDateCinematic event={event} theme={theme} />;
+}
+
 // ─── Default export: HeroSection ──────────────────────────────────────────────
 export default function HeroSection({ event, participant, theme, parentsConfig }: Props) {
-  const isBotanical = theme.layoutVariant === "botanical";
-  const hasCover    = !!event.cover_image;
+  const isBotanical   = theme.layoutVariant === "botanical";
+  const hasCover      = !!event.cover_image;
+  const isSaveTheDate = event.style.eventType === "save_the_date";
+
+  // ── SAVE THE DATE: custom photo hero with script title + date layout ───────
+  if (isSaveTheDate) {
+    return <SaveTheDateHero event={event} theme={theme} />;
+  }
 
   // ── WITH COVER: clean photo + event name only ──────────────────────────────
   if (hasCover) {

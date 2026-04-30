@@ -101,13 +101,18 @@ export default function EventSettingsTab({ event }: Props) {
   const [person2Name,    setPerson2Name]    = useState(event.style.person2Name   ?? "");
   const [greetingText,   setGreetingText]   = useState(event.style.greetingText  ?? "");
 
-  const [ribbonStyle, setRibbonStyle] = useState<RibbonStyle>((event.style.ribbonStyle as RibbonStyle) ?? "classic");
+  const [ribbonStyle,      setRibbonStyle]      = useState<RibbonStyle>((event.style.ribbonStyle as RibbonStyle) ?? "classic");
+  const [saveTheDateStyle, setSaveTheDateStyle] = useState<"cinematic" | "editorial">(
+    (event.style.saveTheDateStyle as "cinematic" | "editorial") ?? "cinematic"
+  );
 
-  const isCustom    = selectedTheme === "custom";
-  const isElegant   = selectedTheme === "elegant";
-  const isLeaves    = selectedTheme === "leaves";
-  const isWedding   = eventType === "wedding";
-  const showSeal    = isElegant || isLeaves; // themes that use the wax seal
+  const isCustom       = selectedTheme === "custom";
+  const isElegant      = selectedTheme === "elegant";
+  const isLeaves       = selectedTheme === "leaves";
+  const isWedding      = eventType === "wedding";
+  const isSaveTheDate  = eventType === "save_the_date";
+  const showPairNames  = isWedding || isSaveTheDate;
+  const showSeal       = isElegant || isLeaves; // themes that use the wax seal
 
   function applyPreset(t: typeof PRESET_THEMES[number]) {
     setSelectedTheme(t.id);
@@ -148,6 +153,7 @@ export default function EventSettingsTab({ event }: Props) {
       textColor,
       fontFamily,
       eventType,
+      ...(isSaveTheDate ? { saveTheDateStyle } : {}),
       ...(person1Name.trim()  ? { person1Name:  person1Name.trim()  } : {}),
       ...(person2Name.trim()  ? { person2Name:  person2Name.trim()  } : {}),
       ...(greetingText.trim() ? { greetingText: greetingText.trim() } : {}),
@@ -173,51 +179,117 @@ export default function EventSettingsTab({ event }: Props) {
       {/* ── Event type ── */}
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-2">Tipo de evento</label>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           {([
-            { id: "general",     label: "General",     emoji: "🎉" },
-            { id: "wedding",     label: "Boda",        emoji: "💍" },
-            { id: "quinceanera", label: "Quinceaños",  emoji: "👑" },
-            { id: "birthday",    label: "Cumpleaños",  emoji: "🎂" },
+            { id: "general",       label: "General",       emoji: "🎉" },
+            { id: "wedding",       label: "Boda",          emoji: "💍" },
+            { id: "quinceanera",   label: "Quinceaños",    emoji: "👑" },
+            { id: "birthday",      label: "Cumpleaños",    emoji: "🎂" },
+            { id: "save_the_date", label: "Save the Date", emoji: "📅" },
           ] as { id: EventType; label: string; emoji: string }[]).map((t) => (
             <button key={t.id} type="button" onClick={() => setEventType(t.id)}
               className={`rounded border-2 py-2 text-center transition-all ${eventType === t.id ? "border-stone-800 bg-stone-50 shadow-sm" : "border-stone-200 hover:border-stone-400"}`}>
               <p className="text-lg">{t.emoji}</p>
-              <p className="text-xs text-stone-600 mt-0.5">{t.label}</p>
+              <p className="text-[10px] text-stone-600 mt-0.5 leading-tight">{t.label}</p>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Wedding names */}
-      {isWedding && (
+      {/* Save the Date style selector */}
+      {isSaveTheDate && (
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-2">Estilo de portada</label>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Cinematic preview */}
+            <button type="button" onClick={() => setSaveTheDateStyle("cinematic")}
+              className={`rounded border-2 overflow-hidden transition-all ${saveTheDateStyle === "cinematic" ? "border-stone-800 shadow-sm" : "border-stone-200 hover:border-stone-400"}`}>
+              <div className="relative h-20 bg-stone-800 flex flex-col items-center justify-between py-2 px-2">
+                <p style={{ fontFamily: "cursive", fontSize: "0.7rem", color: "white" }}>Save the Date</p>
+                <div className="text-white text-center">
+                  <p style={{ fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.05em" }}>Olivia + Lucas</p>
+                  <div className="flex items-center gap-1 justify-center mt-0.5">
+                    <p style={{ fontSize: "0.45rem", color: "rgba(255,255,255,0.7)" }}>Sábado</p>
+                    <div style={{ width: 0.5, height: 10, backgroundColor: "rgba(255,255,255,0.4)" }}/>
+                    <p style={{ fontSize: "0.75rem", fontWeight: 300, color: "white" }}>13</p>
+                    <div style={{ width: 0.5, height: 10, backgroundColor: "rgba(255,255,255,0.4)" }}/>
+                    <p style={{ fontSize: "0.45rem", color: "rgba(255,255,255,0.7)" }}>Nov</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[10px] text-stone-600 text-center py-1.5 font-medium">Cinematográfico</p>
+            </button>
+
+            {/* Editorial preview */}
+            <button type="button" onClick={() => setSaveTheDateStyle("editorial")}
+              className={`rounded border-2 overflow-hidden transition-all ${saveTheDateStyle === "editorial" ? "border-stone-800 shadow-sm" : "border-stone-200 hover:border-stone-400"}`}>
+              <div className="h-20 bg-stone-50 flex flex-col justify-between py-2 px-2"
+                   style={{ borderBottom: "1px solid #e7e4df" }}>
+                <div>
+                  <div style={{ borderTop: "1.5px solid #1a1a1a", marginBottom: 2 }}/>
+                  <p style={{ fontSize: "0.6rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", textAlign: "center", color: "#1a1a1a" }}>
+                    Save the Date
+                  </p>
+                  <div style={{ borderBottom: "1.5px solid #1a1a1a", marginTop: 2 }}/>
+                </div>
+                <div className="flex-1 mx-1 my-1 bg-stone-300" style={{ minHeight: 20 }}/>
+                <p style={{ fontSize: "0.65rem", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", color: "#1a1a1a" }}>
+                  Sarah &amp; James
+                </p>
+              </div>
+              <p className="text-[10px] text-stone-600 text-center py-1.5 font-medium">Editorial</p>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pair names — shown for Boda and Save the Date */}
+      {showPairNames && (
         <div className="bg-stone-50 border border-stone-200 rounded p-4 space-y-3">
-          <p className="text-xs text-stone-500 tracking-wide uppercase">Nombres de la pareja</p>
-          <p className="text-xs text-stone-400">Se mostrarán en la invitación con un &amp; entre ellos, en lugar del nombre del evento.</p>
+          <p className="text-xs text-stone-500 tracking-wide uppercase">
+            {isSaveTheDate ? "Nombres de los protagonistas" : "Nombres de la pareja"}
+          </p>
+          <p className="text-xs text-stone-400">
+            {isSaveTheDate
+              ? "Se mostrarán en el Save the Date con un + entre ellos."
+              : "Se mostrarán en la invitación con un & entre ellos, en lugar del nombre del evento."}
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-stone-600 mb-1">Novia / Persona 1</label>
+              <label className="block text-xs font-medium text-stone-600 mb-1">
+                {isSaveTheDate ? "Persona 1" : "Novia / Persona 1"}
+              </label>
               <input value={person1Name} onChange={(e) => setPerson1Name(e.target.value)}
-                placeholder="Ana García"
+                placeholder="Olivia"
                 className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-stone-600 mb-1">Novio / Persona 2</label>
+              <label className="block text-xs font-medium text-stone-600 mb-1">
+                {isSaveTheDate ? "Persona 2" : "Novio / Persona 2"}
+              </label>
               <input value={person2Name} onChange={(e) => setPerson2Name(e.target.value)}
-                placeholder="Carlos López"
+                placeholder="Lucas"
                 className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
             </div>
           </div>
           {/* Live preview */}
           {(person1Name || person2Name) && (
             <div className="text-center pt-1 pb-2">
-              <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: primaryColor }}>
-                {person1Name || "Novia"}
-              </p>
-              <p className="text-xl font-light" style={{ color: accentColor }}>&amp;</p>
-              <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: primaryColor }}>
-                {person2Name || "Novio"}
-              </p>
+              {isSaveTheDate ? (
+                <p className="text-xl font-semibold tracking-wide" style={{ color: primaryColor }}>
+                  {person1Name || "Persona 1"} + {person2Name || "Persona 2"}
+                </p>
+              ) : (
+                <>
+                  <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: primaryColor }}>
+                    {person1Name || "Novia"}
+                  </p>
+                  <p className="text-xl font-light" style={{ color: accentColor }}>&amp;</p>
+                  <p className="text-2xl" style={{ fontFamily: "Great Vibes, cursive", color: primaryColor }}>
+                    {person2Name || "Novio"}
+                  </p>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -237,7 +309,7 @@ export default function EventSettingsTab({ event }: Props) {
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-1">Nombre del evento</label>
         <input {...register("name")} className="w-full border border-stone-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-stone-500" />
-        {isWedding && <p className="text-xs text-stone-400 mt-1">Se usa en el dashboard y URL. En la invitación se muestran los nombres de la pareja.</p>}
+        {showPairNames && <p className="text-xs text-stone-400 mt-1">Se usa en el dashboard y URL. En la invitación se muestran los nombres capturados arriba.</p>}
       </div>
       <div>
         <label className="block text-sm font-medium text-stone-700 mb-1">Fecha y hora</label>
